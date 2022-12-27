@@ -1,0 +1,24 @@
+a. Electricity production 815870.00 9.45 11.68 819690.49
+b. Refinery 42191.86 2.20 0.07 42260.97
+c. Manufacturing of solid fuel 18118.94 0.20 0.30 18217.44
+a. Cement 40545.03 0.56 0.57 40733.55
+b. Iron & steel 95507.80 1.17 1.50 95998.53
+c. Nonferrous metals 1857.23 0.02 0.03 1866.59
+d. Chemicals 7877.10 0.25 0.08 7905.62
+e. Pulp & paper 6723.13 0.07 0.10 6755.85
+h. Mining & quarrying 4298.93 0.17 0.04 4313.44
+i. Textile/leather 2514.10 0.05 0.03 2524.78
+j. Bricks 1138.93 0.01 0.02 1144.43
+k. Fertilizer 5724.40 0.71 0.17 5790.46
+l. Engineering Sector 3469.44 0.14 0.03 3480.73
+m. Nonspecific Industries 129495.80 2.13 1.82 130104.32
+a. Road transport 161503.70 24.77 7.40 164317.87
+b. Civil Aviation 12376.90 0.09 0.35 12487.29
+c. Railways 6696.10 0.38 2.58 7503.20
+d. Navigation 3653.99 0.28 0.13 3700.59
+a. Commercials/Institutional 4251.00 8.04 1.08 4753.71
+b. Residential 75144.00 152.58 20.42 84678.38
+c. Agricultural/fisheries 2924.31 0.12 0.02 2933.99
+d. Biomass burnt for energy 0.0 0.98 0.03 29.88
+1. Solid fuels 772.00 0.00 0.00 16212.00
+2. Oil & Natural gas 0.00 1557.94 0.00 32716.66

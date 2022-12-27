@@ -1,0 +1,221 @@
+sector-name,subsector-name,technology,year
+electricity,coal,coal (conv pul),1975
+electricity,coal,coal (conv pul),1990
+electricity,coal,coal (conv pul),2005
+electricity,coal,coal (conv pul),2010
+electricity,coal,coal (conv pul),2015
+electricity,coal,coal (conv pul),2020
+electricity,coal,coal (conv pul),2025
+electricity,coal,coal (conv pul),2030
+electricity,coal,coal (conv pul),2035
+electricity,coal,coal (conv pul),2040
+electricity,coal,coal (conv pul),2045
+electricity,coal,coal (conv pul),2050
+electricity,coal,coal (conv pul),2055
+electricity,coal,coal (conv pul),2060
+electricity,coal,coal (conv pul),2065
+electricity,coal,coal (conv pul),2070
+electricity,coal,coal (conv pul),2075
+electricity,coal,coal (conv pul),2080
+electricity,coal,coal (conv pul),2085
+electricity,coal,coal (conv pul),2090
+electricity,coal,coal (conv pul),2095
+electricity,coal,coal (conv pul),2100
+electricity,coal,coal (conv pul CCS),1975
+electricity,coal,coal (conv pul CCS),1990
+electricity,coal,coal (conv pul CCS),2005
+electricity,coal,coal (conv pul CCS),2010
+electricity,coal,coal (conv pul CCS),2015
+electricity,coal,coal (conv pul CCS),2020
+electricity,coal,coal (conv pul CCS),2025
+electricity,coal,coal (conv pul CCS),2030
+electricity,coal,coal (conv pul CCS),2035
+electricity,coal,coal (conv pul CCS),2040
+electricity,coal,coal (conv pul CCS),2045
+electricity,coal,coal (conv pul CCS),2050
+electricity,coal,coal (conv pul CCS),2055
+electricity,coal,coal (conv pul CCS),2060
+electricity,coal,coal (conv pul CCS),2065
+electricity,coal,coal (conv pul CCS),2070
+electricity,coal,coal (conv pul CCS),2075
+electricity,coal,coal (conv pul CCS),2080
+electricity,coal,coal (conv pul CCS),2085
+electricity,coal,coal (conv pul CCS),2090
+electricity,coal,coal (conv pul CCS),2095
+electricity,coal,coal (conv pul CCS),2100
+electricity,coal,coal (IGCC),1975
+electricity,coal,coal (IGCC),1990
+electricity,coal,coal (IGCC),2005
+electricity,coal,coal (IGCC),2010
+electricity,coal,coal (IGCC),2015
+electricity,coal,coal (IGCC),2020
+electricity,coal,coal (IGCC),2025
+electricity,coal,coal (IGCC),2030
+electricity,coal,coal (IGCC),2035
+electricity,coal,coal (IGCC),2040
+electricity,coal,coal (IGCC),2045
+electricity,coal,coal (IGCC),2050
+electricity,coal,coal (IGCC),2055
+electricity,coal,coal (IGCC),2060
+electricity,coal,coal (IGCC),2065
+electricity,coal,coal (IGCC),2070
+electricity,coal,coal (IGCC),2075
+electricity,coal,coal (IGCC),2080
+electricity,coal,coal (IGCC),2085
+electricity,coal,coal (IGCC),2090
+electricity,coal,coal (IGCC),2095
+electricity,coal,coal (IGCC),2100
+electricity,coal,coal (IGCC CCS),1975
+electricity,coal,coal (IGCC CCS),1990
+electricity,coal,coal (IGCC CCS),2005
+electricity,coal,coal (IGCC CCS),2010
+electricity,coal,coal (IGCC CCS),2015
+electricity,coal,coal (IGCC CCS),2020
+electricity,coal,coal (IGCC CCS),2025
+electricity,coal,coal (IGCC CCS),2030
+electricity,coal,coal (IGCC CCS),2035
+electricity,coal,coal (IGCC CCS),2040
+electricity,coal,coal (IGCC CCS),2045
+electricity,coal,coal (IGCC CCS),2050
+electricity,coal,coal (IGCC CCS),2055
+electricity,coal,coal (IGCC CCS),2060
+electricity,coal,coal (IGCC CCS),2065
+electricity,coal,coal (IGCC CCS),2070
+electricity,coal,coal (IGCC CCS),2075
+electricity,coal,coal (IGCC CCS),2080
+electricity,coal,coal (IGCC CCS),2085
+electricity,coal,coal (IGCC CCS),2090
+electricity,coal,coal (IGCC CCS),2095
+electricity,coal,coal (IGCC CCS),2100
+electricity,gas,coal (IGCC CCS),1975
+electricity,gas,coal (IGCC CCS),1990
+electricity,gas,coal (IGCC CCS),2005
+electricity,gas,coal (IGCC CCS),2010
+electricity,gas,coal (IGCC CCS),2015
+electricity,gas,coal (IGCC CCS),2020
+electricity,gas,coal (IGCC CCS),2025
+electricity,gas,coal (IGCC CCS),2030
+electricity,gas,coal (IGCC CCS),2035
+electricity,gas,coal (IGCC CCS),2040
+electricity,gas,coal (IGCC CCS),2045
+electricity,gas,coal (IGCC CCS),2050
+electricity,gas,coal (IGCC CCS),2055
+electricity,gas,coal (IGCC CCS),2060
+electricity,gas,coal (IGCC CCS),2065
+electricity,gas,coal (IGCC CCS),2070
+electricity,gas,coal (IGCC CCS),2075
+electricity,gas,coal (IGCC CCS),2080
+electricity,gas,coal (IGCC CCS),2085
+electricity,gas,coal (IGCC CCS),2090
+electricity,gas,coal (IGCC CCS),2095
+electricity,gas,coal (IGCC CCS),2100
+electricity,gas,gas (CC),1975
+electricity,gas,gas (CC),1990
+electricity,gas,gas (CC),2005
+electricity,gas,gas (CC),2010
+electricity,gas,gas (CC),2015
+electricity,gas,gas (CC),2020
+electricity,gas,gas (CC),2025
+electricity,gas,gas (CC),2030
+electricity,gas,gas (CC),2035
+electricity,gas,gas (CC),2040
+electricity,gas,gas (CC),2045
+electricity,gas,gas (CC),2050
+electricity,gas,gas (CC),2055
+electricity,gas,gas (CC),2060
+electricity,gas,gas (CC),2065
+electricity,gas,gas (CC),2070
+electricity,gas,gas (CC),2075
+electricity,gas,gas (CC),2080
+electricity,gas,gas (CC),2085
+electricity,gas,gas (CC),2090
+electricity,gas,gas (CC),2095
+electricity,gas,gas (CC),2100
+electricity,gas,gas (CC CCS),1975
+electricity,gas,gas (CC CCS),1990
+electricity,gas,gas (CC CCS),2005
+electricity,gas,gas (CC CCS),2010
+electricity,gas,gas (CC CCS),2015
+electricity,gas,gas (CC CCS),2020
+electricity,gas,gas (CC CCS),2025
+electricity,gas,gas (CC CCS),2030
+electricity,gas,gas (CC CCS),2035
+electricity,gas,gas (CC CCS),2040
+electricity,gas,gas (CC CCS),2045
+electricity,gas,gas (CC CCS),2050
+electricity,gas,gas (CC CCS),2055
+electricity,gas,gas (CC CCS),2060
+electricity,gas,gas (CC CCS),2065
+electricity,gas,gas (CC CCS),2070
+electricity,gas,gas (CC CCS),2075
+electricity,gas,gas (CC CCS),2080
+electricity,gas,gas (CC CCS),2085
+electricity,gas,gas (CC CCS),2090
+electricity,gas,gas (CC CCS),2095
+electricity,gas,gas (CC CCS),2100
+electricity,refined liquids,refined liquids (steam/CT),1975
+electricity,refined liquids,refined liquids (steam/CT),1990
+electricity,refined liquids,refined liquids (steam/CT),2005
+electricity,refined liquids,refined liquids (steam/CT),2010
+electricity,refined liquids,refined liquids (steam/CT),2015
+electricity,refined liquids,refined liquids (steam/CT),2020
+electricity,refined liquids,refined liquids (steam/CT),2025
+electricity,refined liquids,refined liquids (steam/CT),2030
+electricity,refined liquids,refined liquids (steam/CT),2035
+electricity,refined liquids,refined liquids (steam/CT),2040
+electricity,refined liquids,refined liquids (steam/CT),2045
+electricity,refined liquids,refined liquids (steam/CT),2050
+electricity,refined liquids,refined liquids (steam/CT),2055
+electricity,refined liquids,refined liquids (steam/CT),2060
+electricity,refined liquids,refined liquids (steam/CT),2065
+electricity,refined liquids,refined liquids (steam/CT),2070
+electricity,refined liquids,refined liquids (steam/CT),2075
+electricity,refined liquids,refined liquids (steam/CT),2080
+electricity,refined liquids,refined liquids (steam/CT),2085
+electricity,refined liquids,refined liquids (steam/CT),2090
+electricity,refined liquids,refined liquids (steam/CT),2095
+electricity,refined liquids,refined liquids (steam/CT),2100
+electricity,refined liquids,refined liquids (CC),1975
+electricity,refined liquids,refined liquids (CC),1990
+electricity,refined liquids,refined liquids (CC),2005
+electricity,refined liquids,refined liquids (CC),2010
+electricity,refined liquids,refined liquids (CC),2015
+electricity,refined liquids,refined liquids (CC),2020
+electricity,refined liquids,refined liquids (CC),2025
+electricity,refined liquids,refined liquids (CC),2030
+electricity,refined liquids,refined liquids (CC),2035
+electricity,refined liquids,refined liquids (CC),2040
+electricity,refined liquids,refined liquids (CC),2045
+electricity,refined liquids,refined liquids (CC),2050
+electricity,refined liquids,refined liquids (CC),2055
+electricity,refined liquids,refined liquids (CC),2060
+electricity,refined liquids,refined liquids (CC),2065
+electricity,refined liquids,refined liquids (CC),2070
+electricity,refined liquids,refined liquids (CC),2075
+electricity,refined liquids,refined liquids (CC),2080
+electricity,refined liquids,refined liquids (CC),2085
+electricity,refined liquids,refined liquids (CC),2090
+electricity,refined liquids,refined liquids (CC),2095
+electricity,refined liquids,refined liquids (CC),2100
+electricity,refined liquids,refined liquids (CC CCS),1975
+electricity,refined liquids,refined liquids (CC CCS),1990
+electricity,refined liquids,refined liquids (CC CCS),2005
+electricity,refined liquids,refined liquids (CC CCS),2010
+electricity,refined liquids,refined liquids (CC CCS),2015
+electricity,refined liquids,refined liquids (CC CCS),2020
+electricity,refined liquids,refined liquids (CC CCS),2025
+electricity,refined liquids,refined liquids (CC CCS),2030
+electricity,refined liquids,refined liquids (CC CCS),2035
+electricity,refined liquids,refined liquids (CC CCS),2040
+electricity,refined liquids,refined liquids (CC CCS),2045
+electricity,refined liquids,refined liquids (CC CCS),2050
+electricity,refined liquids,refined liquids (CC CCS),2055
+electricity,refined liquids,refined liquids (CC CCS),2060
+electricity,refined liquids,refined liquids (CC CCS),2065
+electricity,refined liquids,refined liquids (CC CCS),2070
+electricity,refined liquids,refined liquids (CC CCS),2075
+electricity,refined liquids,refined liquids (CC CCS),2080
+electricity,refined liquids,refined liquids (CC CCS),2085
+electricity,refined liquids,refined liquids (CC CCS),2090
+electricity,refined liquids,refined liquids (CC CCS),2095
+electricity,refined liquids,refined liquids (CC CCS),2100

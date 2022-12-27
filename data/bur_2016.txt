@@ -1,0 +1,24 @@
+a. Electricity production 1127732.23 2016
+b. Refinery 71931.17 2016
+c. Manufacturing of solid fuel 6923.43 2016
+a. Cement 53658.08 2016
+b. Iron & steel 135420.48 2016
+c. Nonferrous metals 7704.35 2016
+d. Chemicals 1982.48 2016
+e. Pulp & paper 2633.43 2016
+h. Mining & quarrying 4095.79 2016
+i. Textile/leather 2309.87 2016
+j. Bricks 608.66 2016
+k. Fertilizer 6007.88 2016
+l. Engineering Sector 1632.2 2016
+m. Nonspecific Industries 181685.93 2016
+a. Road transport 247593.77 2016
+b. Civil Aviation 16283.73 2016
+c. Railways 7611.89 2016
+d. Navigation 2944.3 2016
+a. Commercials/Institutional 68975.54 2016
+b. Residential 	127282.5 2016
+c. Agricultural/fisheries 2647.85 2016
+d. Biomass burnt for energy 14584.37 2016
+1. Solid fuels 	17120.52 2016
+2. Oil & Natural gas 20058.04 2016

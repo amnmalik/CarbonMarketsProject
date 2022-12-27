@@ -1,0 +1,258 @@
+---
+title: "GCAMvs.BEE"
+output: html_document
+date: "2022-11-16"
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message = F,warning = F)
+```
+
+```{r}
+library(tidyverse)
+library(ggsci)
+library(DT)
+```
+
+### Description of tasks
+
+There are two tasks:
+
+1.  Compare the current and future production and emissions from GCAM and the BEE report.
+
+2.  Prepare a target constraint file for GCAM in 2025 and 2030 for industry sectors based on BEE
+
+```{r}
+### Reading in GCAM data from a BAU/Current policies run
+gcamBau <- readxl::read_excel("data/gcamBau2.xls") %>%
+ filter(title != "title") %>%
+  select(-scenario,-region) %>%
+  mutate(across(c(`1990`:`2095`),as.numeric)) %>%
+  mutate(across(c(`1990`:`2095`),~round(.,digits = 2))) %>%
+  pivot_longer(`1990`:`2095`,names_to = "year",values_to = "value") %>%
+  mutate(variable = if_else(Units %in% c("Mt","Mt N", "EJ"), "production", "emissions")) %>%
+  mutate(scenario = "BAU_curr_pol") 
+
+DT::datatable(data = gcamBau%>% 
+  select(-title))
+```
+
+```{r eval=FALSE, include=FALSE}
+## aggregating and adding sectors
+gcam_wider <- gcam_ref %>%
+  select(-share) %>%
+  pivot_wider(names_from = sector,values_from = value) %>%
+  mutate(`Electricity production`= rowSums(select(., contains("elec_")),na.rm = T)) %>%     mutate(`Transport`= rowSums(select(., contains("trn_")),na.rm = T)) %>%
+  mutate(`Cement`=cement) %>%
+  mutate(`Aluminium`=alumina) %>%
+  mutate(`Agriculture`= `agricultural energy use`) %>%
+  mutate(`Chemicals` =  `chemical energy use`) %>%
+  mutate(`Mining` = `mining energy use`) %>%
+  mutate(`Refinery` = `refining`) %>%
+  mutate(`Commercials/Institutional`= `comm others`) %>%
+  mutate(`Iron & steel` = `iron and steel`) %>%
+  mutate(`Fertilizer`= `N fertilizer`) %>%
+  pivot_longer(5:54,values_to = "value",names_to = "category") %>%
+  mutate(value=value*3.6667) %>%  ### convert MtC to MtCO2
+  mutate(Units="MTCO2") %>%
+    distinct()
+
+write.csv(gcam_wider,file = "gcam_ref_manp.csv")
+
+```
+
+
+```{r}
+#### Reading in data from BEE report on current and future production, emissions
+bee_data <- readxl::read_excel("data/BEE_report.xlsx",
+    skip = 1) %>%
+  rename_all(~c("variable","sector","unit","year","value")) %>%
+  mutate(year= gsub(pattern = "2019-20",replacement = "2019",year)) %>%
+    mutate(year= gsub(pattern = "2030-31",replacement = "2030",year))
+
+### Calculating BAU emissions in 2030
+bau_2030_emissions <- bee_data %>% filter(variable %in% c("Total CO2 emissions","Reduction in CO2 emissions (2030)"),year==2030) %>%
+  pivot_wider(names_from = variable,values_from = value) %>%
+  mutate(`BAU Emissions` = `Total CO2 emissions`+`Reduction in CO2 emissions (2030)`) %>%
+  pivot_longer(cols = 4:6,names_to = "variable") %>%
+  select(4,1,2,3,5)
+
+## Combining the two
+bee_data <- bind_rows(bee_data,bau_2030_emissions) %>%
+  distinct()
+
+### Adding a column on % reduction in emissions wrt BAU
+bee_data_diff_bau <- bee_data %>%
+  filter(variable %in% c("Reduction in CO2 emissions (2030)","BAU Emissions")) %>%
+  pivot_wider(names_from = variable,values_from = value) %>%
+  mutate(value = (`Reduction in CO2 emissions (2030)`/`BAU Emissions`)*100) %>%
+  select(sector,year,value) %>%
+  mutate(variable = "ChangeWrtBAU",unit="percent")
+
+## Putting it all together
+bee_data <- bind_rows(bee_data,bee_data_diff_bau)
+
+DT::datatable(bee_data)
+```
+
+```{r}
+
+## Renaming sector names in GCAM data according to BEE data
+gcamBau <- gcamBau %>%
+  mutate(
+    sector = mgsub::mgsub(sector,pattern = c("iron and steel","cement"," N fertilizer", "aluminum", "alumina", "electricityTPP", "refining", "electricity","N fertilizer"),
+    replacement = c("Iron and Steel", "Cement", "Fertilizer", "Aluminium", "Aluminium", "Thermal Power Plant","Petroleum Refinery","Thermal Power Plant", "Fertilizer"))
+    ) %>%
+  select(-title)
+
+```
+
+## Creating constraint file for sectors in GCAM based on BEE targets.
+
+Note that there are two methods for extrapolation - one based on linear extrapolation of the reduction (compared to BAU). Other based on the linear extrapolation of the trajectory. 
+
+```{r}
+
+# common sectors in GCAM and BEE
+common <- unique(intersect(gcamBau$sector,bee_data$sector))
+
+## Approach 1: Linear extrapolation of the reduction in emissions
+
+target_lin_reduction <- bee_data %>% 
+  filter(variable=="ChangeWrtBAU",sector %in% common) %>%
+  select(sector,year,value,variable) %>% 
+  mutate(year=as.numeric(year)) %>% 
+  bind_rows(data.frame(sector = common,year=2020,value = 0,variable = "ChangeWrtBAU")) %>% 
+  bind_rows(data.frame(
+    sector = rep(common,5),
+    year = c(2025,2035,2040,2045,2050),
+    value=NA,
+    variable= "ChangeWrtBAU")) %>% 
+  arrange(year) %>% 
+  group_by(sector) %>% 
+  select(-variable) %>% 
+  mutate(missing = Hmisc::approxExtrap(x = year,y = value,xout = c(2020,2025,2030,2035,2040,2045,2050),method = "linear",na.rm = T,)$y) %>% 
+  select(-value) %>% 
+   rename("target_percent"=missing) 
+
+final_targets <- left_join(target_lin_reduction %>% mutate(year=as.numeric(year)),gcamBau %>% filter(variable=="emissions",sector %in% common) %>% select(sector,year,value) %>% rename("abs_emiss"=value) %>%  mutate(year=as.numeric(year)),by=c("sector","year")) %>% 
+   mutate(value = (100-target_percent)*0.01,
+          abs_emiss_target=value*abs_emiss,
+          abs_emiss_reduct=abs_emiss-abs_emiss_target)
+
+targets_to_write <- final_targets %>% select(sector,year,abs_emiss_target) %>% rename("value"=abs_emiss_target) %>% 
+arrange(sector,year)
+
+readr::write_csv(targets_to_write,"targets_BEE_app1.csv")
+
+## Approach 2: Based on the linear inter and extrapolation of the resulting trajectory
+
+# Calculating target emissions for GCAM in 2030
+target_2030 <- left_join(bee_data %>% filter(variable=="ChangeWrtBAU", sector %in% common) %>% select(sector,year,value,variable) %>% select(-variable) %>% 
+                           rename("target_percent"=value),
+                      gcamBau %>%
+                        filter(variable=="emissions",sector %in% common) %>% select(sector,year,value,variable) %>% select(-variable) %>% rename("abs_emiss"=value),
+                      by=c("sector","year")) %>% 
+  mutate(value = (100-target_percent)*0.01,
+         abs_emiss_target=value*abs_emiss,
+         abs_reduction=abs_emiss-abs_emiss_target) %>% 
+  select(sector,year,abs_emiss_target) %>%
+  rename("value"=abs_emiss_target) %>%
+  mutate(year=as.numeric(year))
+
+# creating empty df for additional years
+target_missing <- data.frame(
+  sector = rep(common,5), 
+  year = c(2025,2035,2040,2045,2050), 
+  value = NA)
+              
+# extracting 2020 results for linear interpolation between 2020 and 2030
+gcam_2020 <- gcamBau %>%
+  filter(year==2020,variable == "emissions",sector %in% common) %>%
+  select(-Units,-scenario,-variable) %>%
+  mutate(year=as.numeric(year))
+
+# Filling missing years by linear interpolation and extrapolation
+fill_missing <- bind_rows(gcam_2020,target_2030,target_missing) %>% 
+  arrange(year) %>% 
+group_by(sector) %>% 
+  mutate(missing = Hmisc::approxExtrap(x = year,y = value,xout = c(2020,2025,2030,2035,2040,2045,2050),method = "linear",na.rm = T)$y) %>% 
+  select(-value) %>%
+    rename("value"=missing) %>% arrange(sector,year)
+
+readr::write_csv(fill_missing,"targets_BEE_app2.csv")
+
+```
+### Task 1: Comparing emissions
+
+```{r}
+gcam <- gcamBau %>% filter(sector %in% common,variable=="emissions", year %in% c(2015:2050)) %>% select(sector,year,value) %>% mutate(source="GCAM",value=value*3.667)
+
+bee <- bee_data %>% filter(sector %in% common,variable=="Total CO2 emissions")%>% select(sector,year,value)%>% mutate(source="BEE") %>% mutate(source="BEE",year = gsub(year,pattern = 2019,replacement = 2020))
+
+gcam_bee <- bind_rows(gcam,bee) %>% mutate(year=as.numeric(year),source=as.factor(source))
+
+ggplot(gcam_bee)+
+  geom_line(mapping = aes(x = year,y=value, group=interaction(sector,source), color=sector,linetype = source))+
+  facet_wrap(~sector,scales = "free")+
+   scale_color_lancet()+
+  labs(x="",
+       y= " Emissions (MT CO2)",
+       subtitle = "Comparison of Emissions (GCAM NZ vs.BEE)",
+       caption = "Note BEE data for 2020 is actually from 2019-20, for 2030 is from 2030-31")+
+  theme_bw()+
+  theme(axis.text.x = element_text(size = 6))
+  
+```
+
+
+```{r}
+##Comparing Production
+
+gcam <- gcamBau %>% filter(sector %in% common,variable=="production", year %in% c(2015:2050)) %>% select(sector,year,value,Units) %>% mutate(source="GCAM",value=if_else(sector=="Thermal Power Plant",value*277.78,value),Units = if_else(sector=="Thermal Power Plant","TWh",Units)) %>% rename("unit"=Units)
+
+bee <- bee_data %>% filter(sector %in% common,variable=="Production") %>% select(sector,year,value,unit)%>% mutate(source="BEE",year = gsub(year,pattern = 2019,replacement = 2020))
+
+gcam_bee <- bind_rows(gcam,bee)
+
+ggplot(gcam_bee %>% filter(sector!="Petroleum Refinery"))+
+  geom_line(mapping = aes(x = year,y=value, group=interaction(sector,source), color=sector,linetype = source))+
+  facet_wrap(~sector,scales = "free")+
+   scale_color_lancet()+
+  labs(x="",
+       y= " Production (MT) or TWh",
+       subtitle = "Comparison of Production quantity (GCAM NZ vs.BEE)",
+       caption = "Note BEE data for 2020 is actually from 2019-20, for 2030 is from 2030-31")+
+  theme_bw()+
+  theme(axis.text.x = element_text(size = 6))
+
+```
+
+```{r}
+#Comparing GCAM trajectory before and after targets
+## App 1
+
+gcamPlot <- gcamBau %>% filter(variable=="emissions",year<2055) %>% select(year,sector,value,scenario) %>% mutate(year=as.numeric(year))
+
+targetPlot1 <- targets_to_write %>%  mutate(scenario="ETS_App1") %>% select(year,sector,value,scenario)
+
+targetPlot2 <- fill_missing %>%  mutate(scenario="ETS_App2") %>% select(year,sector,value,scenario)
+
+gcamPlot <- bind_rows(gcamPlot,targetPlot1) %>% 
+  bind_rows(targetPlot2)
+
+ggplot()+
+  geom_line(gcamPlot,mapping=aes(x=year,y=value,color=sector,linetype=scenario))+
+  facet_wrap(~sector,scales = "free")+
+  theme_bw()+
+  scale_color_lancet()+
+  labs(x="",
+       y="CO2 Emissions (MTC)",
+       )+
+  theme(axis.text.x = element_text(size = 6))
+```
+
+
+

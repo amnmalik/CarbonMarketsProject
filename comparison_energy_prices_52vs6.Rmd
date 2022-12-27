@@ -1,0 +1,120 @@
+---
+title: "Energy Prices to Industry"
+output: 
+  html_document: 
+    theme: paper
+    toc: yes
+    number_sections: yes
+    df_print: kable
+date: "2022-11-23"
+editor_options: 
+  chunk_output_type: console
+---
+
+The following document compares the energy prices to industry between GCAM5.2-India and GCAM 6.0. It then computes the difference of the two prices and saves the resulting file as a CSV.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE,cache = T
+)
+```
+
+```{r}
+library(tidyverse)
+library(ggsci)
+library(DT)
+```
+
+## Energy prices to industry in GCAM 5.2
+
+-   Note that in GCAM 5.2 only includes the fuel *H2 enduse*. For comparison across versions, it has been renamed to *H2 industrial* here.
+
+```{r}
+X5_2prices <- read_delim("5_2prices.txt", 
+    delim = "\t", escape_double = FALSE, 
+    trim_ws = TRUE, skip = 1) %>% 
+    pivot_longer(`1990`:`2100`,names_to = "year",values_to = "value") %>% 
+select(-c(1,5)) %>% 
+  mutate(source="GCAM5.2") %>% 
+  mutate(fuel=gsub(fuel,pattern = "H2 enduse",replacement = "H2 industrial"))
+
+datatable(X5_2prices,filter = 'top', options = list(pageLength = 10, autoWidth = TRUE))
+```
+
+## Energy prices to industry in GCAM 6
+
+```{r}
+# X6prices <- read_delim("6prices.txt", 
+#     delim = "\t", escape_double = FALSE, 
+#     trim_ws = TRUE, skip = 1) %>% 
+#     pivot_longer(`1990`:`2100`,names_to = "year",values_to = "value") %>% 
+# select(-c(1,5)) %>% 
+#   mutate(source="GCAM6")
+
+X6prices <- read_delim("6prices_wo_ind_adder.txt",
+    delim = "\t", escape_double = FALSE,
+    trim_ws = TRUE, skip = 1) %>%
+    pivot_longer(`1990`:`2100`,names_to = "year",values_to = "value") %>%
+select(-c(1,5)) %>%
+  mutate(source="GCAM_w/oAdder")
+
+
+datatable(X6prices,filter = 'top', options = list(pageLength = 10, autoWidth = TRUE))
+
+```
+
+## Energy prices in GCAM 6_new
+
+```{r}
+X6Newprices <- read_delim("6_Prices_w_ind_adder.txt", 
+    delim = "\t", escape_double = FALSE, 
+    trim_ws = TRUE, skip = 1) %>% 
+    pivot_longer(`1990`:`2100`,names_to = "year",values_to = "value") %>% 
+select(-c(1,5)) %>% 
+  mutate(source="GCAM6_wAdder")
+```
+
+```{r}
+# merging the two dataframes 
+merging <- bind_rows(X5_2prices,X6prices,X6Newprices)
+
+```
+
+## Comparison of energy prices
+
+```{r, out.width='.8\\textwidth'}
+### plotting
+ggplot()+
+  geom_line(merging %>% filter(year %in% c(2010:2040)),mapping = aes(x=year,y=value,color=source,group=source))+
+  facet_wrap(~fuel,scales = "free")+
+  theme_bw()+
+  scale_color_lancet()+
+  theme(axis.text.x = element_text(angle = 90))+
+  labs(y="Price (1975$/GJ)",
+       x="",subtitle = "Comparison of energy prices to industry in GCAM5.2-India, GCAM 6_raw, and"
+        )
+```
+
+### Difference in Energy prices to Industry between GCAM 6 and GCAM 5.2-India
+
+```{r}
+
+merging <- left_join(X5_2prices,X6prices,  by= c("year","fuel","region","Units"))
+### creating difference
+merging_diff <- merging %>% 
+  mutate(diff = (value.y-value.x)*-1) %>% 
+  mutate(diff=round(diff,4)) %>% 
+  select(region,fuel,year,Units,diff)
+
+datatable(merging_diff,filter = 'top', options = list(pageLength = 10, autoWidth = TRUE))
+
+merging_for_gcam <- merging_diff %>% 
+  select(-"Units") %>% 
+  mutate(`minicam-non-energy-input`="tax") %>% 
+  rename(`input-cost`=diff) %>% 
+  select(1,2,3,5,4)
+
+write_csv(merging_for_gcam,"fuelPriceDiff.csv")
+```

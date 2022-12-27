@@ -1,0 +1,105 @@
+---
+title: "Historical Industry data"
+output: html_document
+date: "2022-11-14"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Required libraries
+library(tidyverse)
+library(ggsci)
+```
+## Data from BUR
+
+### Data from BUR 2010
+```{r}
+bur_2010 <- read_csv("~/CEEW/Carbon Markets/From_BUR/data/bur_2010.txt", 
+    col_names = FALSE) %>% 
+    separate(col = 1,into = c("number","mix"),sep = ". ",extra = "merge") %>% 
+   select(-1) %>% 
+  separate(col=1,into = c("category","Value"),
+    sep = " (?=[0,1,2,3,4,5,6,7,8,9])",extra = "merge") %>% 
+  separate(col=2, into = c("c_1","c_2","c_3","c_4"),
+           sep = " ") %>% 
+  select(category,c_4) %>%
+  rename("Value" = 2) %>% 
+  mutate(unit = "GgCO2",Value = as.numeric(Value),Year = 2010) %>% 
+  mutate(share_in_tot_em=Value/2136841)
+```
+
+### Data from BUR 2014
+```{r}
+bur_2014 <- read_csv("~/CEEW/Carbon Markets/From_BUR/data/bur_2014.txt", 
+    col_names = FALSE) %>% 
+    separate(col = 1,into = c("number","mix"),sep = ". ",extra = "merge") %>% 
+  separate(col=2,into = c("category","Value"),
+    sep = " (?=[1,2,3,4,5,6,7,8,9])",extra = "merge") %>% 
+  mutate(unit = "GgCO2",Value = as.numeric(Value),Year = 2014) %>% 
+  mutate(share_in_tot_em=Value/2607488) %>% 
+  select(-1)
+```
+
+
+### Data from BUR 2016
+```{r}
+bur_2016 <- read_csv("~/CEEW/Carbon Markets/From_BUR/data/bur_2016.txt", 
+    col_names = FALSE) %>% 
+  separate(col = 1,into = c("number","category"),sep = ". ",extra = "merge") %>% 
+  mutate(category=gsub(pattern = " 2016",replacement = "",x = category)) %>% 
+  mutate(Value=as.numeric(str_extract(category, "\\d+\\.*\\d*")))%>%
+  mutate(category = gsub(pattern = "\\d+\\.*\\d*",replacement = "",category)) %>% 
+  mutate(category = str_trim(category,side = "both")) %>% 
+  select(-1) %>% 
+  mutate(share_in_tot_em = Value/2838888.58, unit="GgCO2e", Year = 2016)
+
+```   
+
+### Combining all BURs together
+```{r}
+bur_all <- bind_rows(bur_2010,bur_2014,bur_2016)
+```
+
+### Filtering Sectors interesting for Carbon Markets
+```{r}
+names <- c("Electricity production","Refinery","Cement","Iron & steel","Pulp & paper","Textile/leather","Fertilizer","Commercials/Institutional","Nonferrous metals","Oil & Natural gas","Railways", "Chemicals")
+
+bur_all_cm <- bur_all %>% filter(category %in% names)
+```
+
+### Plotting
+#### Change in absolute emissions between the three years
+
+```{r}
+ggplot(bur_all_cm %>% mutate(Year=as.character(Year)))+
+  geom_bar(aes(x=Year,y = Value/1000,fill=Year),stat = "identity")+
+  facet_wrap(.~category,scales = "free")+
+  labs(x = "", y = "Emissions (MtCO2)")+
+  scale_fill_lancet()+
+  theme_bw()
+```
+#### Change in share of total emissions
+```{r}
+ggplot(bur_all_cm %>% mutate(Year=as.character(Year)))+
+  geom_bar(aes(x=Year,y = share_in_tot_em*100,fill=Year),stat = "identity")+
+  facet_wrap(.~category,scales = "free")+
+  labs(x = "", y = "Emissions (MtCO2)")+
+  scale_fill_lancet()+
+  theme_bw()
+```
+
+```{r}
+bur_all_cm %>% 
+  group_by(Year) %>% 
+  summarise(sum=sum(share_in_tot_em))
+```
+
+
+
+
+

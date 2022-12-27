@@ -1,0 +1,298 @@
+  <queries> 
+   <aQuery>
+<region name="India" />
+
+      <demographicsQuery title="population by region">
+         <axis1 name="region">region</axis1>
+         <axis2 name="Year">populationMiniCAM</axis2>
+         <xPath buildList="true" dataName="total-population" group="false" sumAll="false">demographics/populationMiniCAM/total-population/node()</xPath>
+         <comments/>
+      </demographicsQuery>
+	  </aQuery>
+	  
+	  <aQuery>
+	  <region name="India" />
+      <gdpQueryBuilder title="GDP MER by region">
+         <axis1 name="region">region</axis1>
+         <axis2 name="Year">gdp-mer</axis2>
+         <xPath buildList="true" dataName="gdp-mer" group="false" sumAll="false">GDP/gdp-mer/text()</xPath>
+         <comments/>
+      </gdpQueryBuilder>
+	  
+	  </aQuery>
+	  
+	     <aQuery>
+	<region name="India" />
+	  <supplyDemandQuery title="primary energy consumption by region (direct equivalent)">
+            <axis1 name="fuel">input[@name]</axis1>
+            <axis2 name="Year">demand-physical[@vintage]</axis2>
+            <xPath buildList="true" dataName="input" group="false" sumAll="false"> <![CDATA[
+			 	 	 declare function local:append-heirarchy($parent as node(), $append as node()) as node() {
+			 	 		 let $scn := $parent/ancestor::scenario,
+			 			   	  $rgn := $parent/ancestor::region
+			 			   return
+			 			   	  document { element scenario {
+			 			 	  					$scn/@*,
+			 			 						element region {
+			 			 							$rgn/@*,
+			 			 							$append
+			 			 						}
+			 			 	  				}
+			 				}
+			 	 	 };  
+			 	 	 declare function local:get-primary-renewable($outputs as node()*) as node()* {
+			 	 	 unordered { 	
+			 	 	 for $output in $outputs 
+			 	 	 let $new_output :=  
+			 	 	 element input {
+			 	 		 attribute type {'input'},
+			 	 		 attribute name {$output/parent::*/following-sibling::keyword/@primary-renewable},
+			 	 		 element demand-physical {
+			 	 			 attribute vintage {$output/@vintage},
+			 	 			 attribute unit {$output/@unit},
+			 	 			 text { $output }
+			 	 		 }
+			 	 	 },
+			 	 	 $new_root := local:append-heirarchy($output/parent::*/parent::*, $new_output)
+			 	 	 return $new_root//text()
+			 	 	 } 
+			 	 	 };
+			 	 	 declare function local:run-primary-energy($scenarios as xs:string*, $regions as xs:string*, $collection as xs:string) as node()* { 	
+			 	 	 let $regionsG := if(not($regions[1] = 'Global'))
+			 	 	 		  then $regions
+			 	 	 		  else distinct-values(collection($collection)/scenario/world/*[@type='region']/@name)
+			 	 	 return
+			 	 	 for $scenario in $scenarios, 	    
+			 	 	 $region in $regionsG 	
+			 	 	 let $scenario_split := tokenize($scenario, ' '), 	    
+                     $scenario_name := string-join($scenario_split[position() < last()], ' '),
+			 	 	 $scenario_date := $scenario_split[last()],
+			 	 	 $currTree := collection($collection)/scenario[@name = $scenario_name and @date = $scenario_date]/world/*[@type = 'region' and @name=$region]
+			 	 	 return (: get renewables from electricity :)
+					 	 	 	local:get-primary-renewable($currTree/*[@type='sector' (: collapse :) and (@name='electricity' or @name='elect_td_bld' or starts-with(@name,'elec_'))]//keyword[fn:exists(@primary-renewable)]/preceding-sibling::output-primary/physical-output)
+					 		 	| (: get renewables from H2ProdCS :)
+					 	 	 	local:get-primary-renewable($currTree/supplysector[@name='H2 central production'](: /*[@type='subsector' (: collapse :) and fn:not(@name='electrolysis')] :)//keyword[fn:exists(@primary-renewable)]/preceding-sibling::output-primary/physical-output)
+					 	 	 	| (: get renewables from H2ProdDist :)
+					 	 	 	local:get-primary-renewable($currTree/supplysector[@name='H2 forecourt production'](: /*[@type='subsector' (: collapse :) and fn:not(@name='electrolysis')] :)//keyword[fn:exists(@primary-renewable)]/preceding-sibling::output-primary/physical-output)
+					 	 	 	| (: get the primaries :)
+	 	 						$currTree//keyword[fn:exists(@primary-consumption)]/preceding-sibling::input-energy/demand-physical/text()
+                                | (: get traditional biomass :)
+							    $currTree//*[@type='input' and @name='traditional biomass']/demand-physical/node()
+			 	 	 	
+	 	 }; 
+            	 local:run-primary-energy((:scenarios:), (:regions:), (:collection:))
+                 ]]>
+            </xPath>
+            <comments/>
+            <labelRewriteList append-values="false">
+               <level name="input">
+                  <rewrite from="traditional biomass" to="j traditional biomass"/>
+                  <rewrite from="geothermal-elect" to="i geothermal"/>
+                  <rewrite from="biomass" to="d biomass"/>
+                  <rewrite from="total biomass" to="d biomass"/>
+                  <rewrite from="regional biomassOil" to="d biomass"/>
+                  <rewrite from="regional corn for ethanol" to="d biomass"/>
+                  <rewrite from="wholesale gas" to=""/>
+                  <rewrite from="nuclear-H2" to="e nuclear"/>
+                  <rewrite from="natural gas" to="b natural gas"/>
+                  <rewrite from="wind-elect" to="g wind"/>
+                  <rewrite from="exotic-elect" to="j breakthrough"/>
+                  <rewrite from="elect_td_ind" to=""/>
+                  <rewrite from="k new" to="k new"/>
+                  <rewrite from="solar-elect" to="h solar"/>
+                  <rewrite from="solar-H2" to="h solar"/>
+                  <rewrite from="regional natural gas" to=""/>
+                  <rewrite from="coal" to="c coal"/>
+                  <rewrite from="crude oil" to="a oil"/>
+                  <rewrite from="hydro-elect" to="f hydro"/>
+                  <rewrite from="nuclear-elect" to="e nuclear"/>
+                  <rewrite from="traded unconventional oil" to="a oil"/>
+                  <rewrite from="wind-H2" to="g wind"/>
+                  <rewrite from="seawater" to=""/>
+                  <rewrite from="water_td_pri_C" to=""/>
+                  <rewrite from="water_td_pri_W" to=""/>
+               </level>
+            </labelRewriteList>
+         </supplyDemandQuery>
+		 </aQuery>
+		 
+		    <aQuery>
+<region name="India" />
+ <supplyDemandQuery title="total final energy by aggregate sector">
+                    <axis1 name="sector">sector</axis1>
+                    <axis2 name="Year">demand-physical[@vintage]</axis2>
+                    <xPath buildList="true" dataName="input" group="false" sumAll="false">*[@type='sector' and ((@name='building' or @name='industry' or @name='transportation') or
+            (exists(child::keyword/@final-energy)))]//*[@type='input' (:collapse:) and
+            not(@name='limestone' or @name='process heat cement' or @name='industrial energy use' or
+                @name='industrial feedstocks' or @name='renewable' or contains(@name, 'trn_') or @name='oil-credits')]/
+            demand-physical[@unit='EJ']/node()</xPath>
+			<comments/>
+         <labelRewriteList append-values="false">
+            <level name="sector">
+               <rewrite from="N fertilizer" to="industry"/>
+               <rewrite from="agriculture energy use" to="industry"/>
+			   <rewrite from="agricultural energy use" to="industry"/>
+               <rewrite from="boilers general" to="industry"/>
+               <rewrite from="machine drive" to="industry"/>
+               <rewrite from="process heat primary metals" to="industry"/>
+               <rewrite from="industrial energy use" to="industry"/>
+               <rewrite from="comm cooling" to="buildings"/>
+               <rewrite from="feedstocks construction" to="industry"/>
+               <rewrite from="comm other" to="buildings"/>
+               <rewrite from="resid other appliances" to="buildings"/>
+               <rewrite from="feedstocks chemicals" to="industry"/>
+               <rewrite from="process heat cement" to="industry"/>
+               <rewrite from="cement" to="industry"/>
+			   <rewrite from="iron and steel" to="industry"/>
+			   <rewrite from="alumina" to="industry"/>
+			   <rewrite from="aluminum" to="industry"/>
+
+			   <rewrite from="chemical energy use" to="industry"/>
+			   <rewrite from="industrial wastewater treatment" to="industry"/>
+			   <rewrite from="industrial water abstraction" to="industry"/>
+			   <rewrite from="industrial water treatment" to="industry"/>
+			   <rewrite from="municipal wastewater treatment" to="industry"/>
+			   <rewrite from="municipal water distribution" to="industry"/>
+			   <rewrite from="municipal water treatment" to="industry"/>
+			    <rewrite from="municipal water abstraction" to="industry"/>
+			   <rewrite from="irrigation water abstraction" to="industry"/>
+			   <rewrite from="other industrial energy use" to="industry"/>
+			   <rewrite from="other industrial feedstocks" to="industry"/>
+	   		   <rewrite from="desalinated water" to="industry"/>
+			   <rewrite from="chemical feedstocks" to="industry"/>
+			   <rewrite from="chemical energy use" to="industry"/>
+			   
+               <rewrite from="electrochemical" to="industry"/>
+               <rewrite from="feedstocks primary metals" to="industry"/>
+               <rewrite from="comm lighting" to="buildings"/>
+               <rewrite from="comm office" to="buildings"/>
+			   <rewrite from="comm hvac" to="buildings"/>
+			   <rewrite from="comm ref" to="buildings"/>
+               <rewrite from="other end uses" to="industry"/>
+               <rewrite from="construction energy use" to="industry"/>
+               <rewrite from="construction feedstocks" to="industry"/>
+			   <rewrite from="comm cooking" to="buildings"/>
+               <rewrite from="resid appliances" to="buildings"/>
+               <rewrite from="resid hot water" to="buildings"/>
+               <rewrite from="resid heating" to="buildings"/>
+               <rewrite from="industrial feedstocks" to="industry"/>
+               <rewrite from="comm heating" to="buildings"/>
+               <rewrite from="boilers pulp paper and wood" to="industry"/>
+               <rewrite from="comm ventilation" to="buildings"/>
+               <rewrite from="process heat general" to="industry"/>
+               <rewrite from="comm hot water" to="buildings"/>
+               <rewrite from="mining energy use" to="industry"/>
+               <rewrite from="limestone feedstocks" to=""/>
+               <rewrite from="comm others" to="buildings"/>
+               <rewrite from="resid lighting" to="buildings"/>
+               <rewrite from="resid cooling" to="buildings"/>
+               <rewrite from="resid others" to="buildings"/>
+               <rewrite from="resid other" to="buildings"/>
+			   <rewrite from="resid rural apploth" to="buildings"/>
+			  <rewrite from="resid rural cooking" to="buildings"/>
+			  <rewrite from="resid rural cooling" to="buildings"/>
+			  <rewrite from="resid rural coolers" to="buildings"/>
+			  <rewrite from="resid rural lighting" to="buildings"/>
+			  <rewrite from="resid rural space heating" to="buildings"/>
+			  <rewrite from="resid urban apploth" to="buildings"/>
+			  <rewrite from="resid urban cooking" to="buildings"/>
+			  <rewrite from="resid urban cooling" to="buildings"/>
+			  <rewrite from="resid urban coolers" to="buildings"/>
+			  <rewrite from="resid urban lighting" to="buildings"/>
+			  <rewrite from="resid urban space heating" to="buildings"/>
+			  <rewrite from="comm refrigeration" to="buildings"/>
+               <rewrite from="trn_aviation_intl" to="transportation"/>
+               <rewrite from="trn_freight" to="transportation"/>
+               <rewrite from="trn_freight_road" to="transportation"/>
+               <rewrite from="trn_pass" to="transportation"/>
+               <rewrite from="trn_pass_road" to="transportation"/>
+               <rewrite from="trn_pass_road_LDV" to="transportation"/>
+               <rewrite from="trn_pass_road_LDV_2W" to="transportation"/>
+               <rewrite from="trn_pass_road_LDV_4W" to="transportation"/>
+               <rewrite from="trn_shipping_intl" to="transportation"/>
+            </level>
+            <level name="input">
+               <rewrite from="traditional biomass" to="7 trad biomass"/>
+               <rewrite from="H2 enduse" to="6 hydrogen"/>
+               <rewrite from="delivered biomass" to="4 biomass"/>
+               <rewrite from="refined liquids enduse" to="1 liquids"/>
+               <rewrite from="elect_td_bld" to="5 electricity"/>
+               <rewrite from="elect_td_trn" to="5 electricity"/>
+               <rewrite from="delivered coal" to="3 coal"/>
+               <rewrite from="elect_td_ind" to="5 electricity"/>
+               <rewrite from="wholesale gas" to="2 gas"/>
+               <rewrite from="refined liquids industrial" to="1 liquids"/>
+               <rewrite from="delivered gas" to="2 gas"/>
+               <rewrite from="district heat" to="8 district heat"/>
+            </level>
+         </labelRewriteList>
+      </supplyDemandQuery>
+	  </aQuery>
+	  
+	  
+		    <aQuery>
+			<region name="India" />
+	           <supplyDemandQuery title="fuel prices to industry">
+                        <axis1 name="fuel">sector</axis1>
+                        <axis2 name="Year">cost</axis2>
+                        <xPath buildList="true" dataName="cost" group="false" sumAll="false">*[@type='sector' and (@name='wholesale gas' or @name='delivered coal' or
+               @name='delivered biomass' or @name='H2 industrial' or @name='H2 enduse' or @name='elect_td_ind' or
+               @name='refined liquids industrial')]/cost/text()</xPath>
+                        <comments/>
+                    </supplyDemandQuery>
+			</aQuery>
+	  
+	     <!-- <aQuery>
+<region name="India" />
+		 <emissionsQueryBuilder title="CO2 emissions by region">
+            <axis1 name="region">region</axis1>
+            <axis2 name="Year">emissions</axis2>
+            <xPath buildList="true" dataName="emissions" group="false" sumAll="false">*[@type='sector' (:collapse:)]//CO2/emissions/node()</xPath>
+            <comments/>
+         </emissionsQueryBuilder>
+		 </aQuery>
+		 
+		    <aQuery>
+<region name="India" />
+		 <supplyDemandQuery title="CO2 emissions by assigned sector (no bio)">
+            <axis1 name="sector">sector[@name]</axis1>
+            <axis2 name="Year">emissions[@year]</axis2>
+            <xPath buildList="true" dataName="input" group="false" sumAll="false"> 
+               </xPath>
+            <comments/>
+            <labelRewriteList append-values="false">
+               <level name="sector">
+                  <rewrite from="trn_passenger" to="transportation"/>
+                  <rewrite from="trn_pass_road_bus" to="transportation"/>
+                  <rewrite from="trn_pass_road_LDV" to="transportation"/>
+                  <rewrite from="trn_freight" to="transportation"/>
+                  <rewrite from="trn_pass_road_LDV_2W" to="transportation"/>
+                  <rewrite from="N fertilizer" to="industry"/>
+                  <rewrite from="comm heating" to="buildings"/>
+                  <rewrite from="resid heating" to="buildings"/>
+                  <rewrite from="trn_aviation_intl" to="transportation"/>
+                  <rewrite from="comm cooling" to="buildings"/>
+                  <rewrite from="trn_pass_road_LDV_4W" to="transportation"/>
+                  <rewrite from="trn_shipping_intl" to="transportation"/>
+                  <rewrite from="trn_freight_road" to="transportation"/>
+                  <rewrite from="comm others" to="buildings"/>
+				  <rewrite from="comm cooking" to="buildings"/>
+                  <rewrite from="trn_pass" to="transportation"/>
+                  <rewrite from="resid cooling" to="buildings"/>
+                  <rewrite from="resid others" to="buildings"/>
+				  <rewrite from="resid rural apploth" to="buildings"/>
+				  <rewrite from="resid rural cooking" to="buildings"/>
+				  <rewrite from="resid rural space heating" to="buildings"/>
+				  <rewrite from="resid urban apploth" to="buildings"/>
+				  <rewrite from="resid urban cooking" to="buildings"/>
+				  
+				  
+					
+
+                  <rewrite from="unconventional oil production" to="industry"/>
+                  <rewrite from="trn_pass_road" to="transportation"/>
+               </level>
+            </labelRewriteList>
+         </supplyDemandQuery>
+		    </aQuery> -->
+</queries>
