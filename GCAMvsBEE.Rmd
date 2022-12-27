@@ -1,13 +1,16 @@
 ---
 title: "GCAMvs.BEE"
-output: 
+author: "Aman Malik"
+date: "2022-11-16"
+output:
+  # github_document:
+#always_allow_html: true
   html_document:
-    toc: true
-    number_sections: false
-    toc_float: true
+    toc: yes
+    number_sections: no
+    toc_float: yes
     code_folding: hide
     theme: cerulean
-date: "2022-11-16"
 editor_options:
   chunk_output_type: console
 ---
