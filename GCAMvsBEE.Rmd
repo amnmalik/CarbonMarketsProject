@@ -1,6 +1,12 @@
 ---
 title: "GCAMvs.BEE"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    number_sections: false
+    toc_float: true
+    code_folding: hide
+    theme: cerulean
 date: "2022-11-16"
 editor_options:
   chunk_output_type: console
@@ -24,6 +30,7 @@ There are two tasks:
 
 2.  Prepare a target constraint file for GCAM in 2025 and 2030 for industry sectors based on BEE
 
+### GCAM BAU or Current Policies data
 ```{r}
 ### Reading in GCAM data from a BAU/Current policies run
 gcamBau <- readxl::read_excel("data/gcamBau2.xls") %>%
@@ -63,7 +70,7 @@ write.csv(gcam_wider,file = "gcam_ref_manp.csv")
 
 ```
 
-
+### BEE data on production, emissions and targets for different sectors
 ```{r}
 #### Reading in data from BEE report on current and future production, emissions
 bee_data <- readxl::read_excel("data/BEE_report.xlsx",
@@ -109,9 +116,9 @@ gcamBau <- gcamBau %>%
 
 ```
 
-## Creating constraint file for sectors in GCAM based on BEE targets.
+### Creating constraint file for sectors in GCAM based on BEE targets.
 
-Note that there are two methods for extrapolation - one based on linear extrapolation of the reduction (compared to BAU). Other based on the linear extrapolation of the trajectory. 
+Note that there are two methods for extrapolation - one based on linear extrapolation of the reduction (compared to BAU). Other based on the linear extrapolation of the trajectory.
 
 ```{r}
 
@@ -146,6 +153,7 @@ targets_to_write <- final_targets %>% select(sector,year,abs_emiss_target) %>% r
 arrange(sector,year)
 
 readr::write_csv(targets_to_write,"targets_BEE_app1.csv")
+DT::datatable(final_targets)
 
 ## Approach 2: Based on the linear inter and extrapolation of the resulting trajectory
 
@@ -185,7 +193,8 @@ group_by(sector) %>%
 readr::write_csv(fill_missing,"targets_BEE_app2.csv")
 
 ```
-### Task 1: Comparing emissions
+
+#### Task 1a: Comparing emissions
 
 ```{r}
 gcam <- gcamBau %>% filter(sector %in% common,variable=="emissions", year %in% c(2015:2050)) %>% select(sector,year,value) %>% mutate(source="GCAM",value=value*3.667)
@@ -206,12 +215,11 @@ ggplot(gcam_bee)+
   theme(axis.text.x = element_text(size = 6))
   
 ```
-
-
+#### Task 1b: Comparing production quantities
 ```{r}
 ##Comparing Production
 
-gcam <- gcamBau %>% filter(sector %in% common,variable=="production", year %in% c(2015:2050)) %>% select(sector,year,value,Units) %>% mutate(source="GCAM",value=if_else(sector=="Thermal Power Plant",value*277.78,value),Units = if_else(sector=="Thermal Power Plant","TWh",Units)) %>% rename("unit"=Units)
+gcam <- gcamBau %>% filter(sector %in% common,variable=="production", year %in% c(2015:2045)) %>% select(sector,year,value,Units) %>% mutate(source="GCAM",value=if_else(sector=="Thermal Power Plant",value*277.78,value),Units = if_else(sector=="Thermal Power Plant","TWh",Units)) %>% rename("unit"=Units)
 
 bee <- bee_data %>% filter(sector %in% common,variable=="Production") %>% select(sector,year,value,unit)%>% mutate(source="BEE",year = gsub(year,pattern = 2019,replacement = 2020))
 
@@ -229,7 +237,7 @@ ggplot(gcam_bee %>% filter(sector!="Petroleum Refinery"))+
   theme(axis.text.x = element_text(size = 6))
 
 ```
-
+#### Task 2: Comparing trajectories BAU and ETS
 ```{r}
 #Comparing GCAM trajectory before and after targets
 ## App 1
@@ -253,6 +261,3 @@ ggplot()+
        )+
   theme(axis.text.x = element_text(size = 6))
 ```
-
-
-
