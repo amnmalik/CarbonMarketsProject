@@ -1,0 +1,26 @@
+<!-- Emission and Output queries for iron and steel, cement -->
+<queries> 
+		<aQuery>
+	<region name="India"/>
+<marketQuery title="CO2 prices">
+    <axis1 name="market">market</axis1>
+    <axis2 name="Year">market</axis2>
+    <xPath buildList="true" dataName="price" group="false" sumAll="false">Marketplace/market[true() and contains(@name,'CO2')]/price/node()</xPath>
+    <comments/>
+</marketQuery>
+</aQuery>
+
+	<aQuery>
+	<region name="India"/>
+<supplyDemandQuery title="fuel prices to industry">
+    <axis1 name="fuel">sector</axis1>
+    <axis2 name="Year">cost</axis2>
+    <xPath buildList="true" dataName="cost" group="false" sumAll="false">*[@type='sector' and (@name='wholesale gas' or @name='delivered coal' or
+               @name='delivered biomass' or @name='H2 industrial' or @name='elect_td_ind' or
+               @name='refined liquids industrial')]/cost/text()</xPath>
+    <comments/>
+</supplyDemandQuery>
+</aQuery>
+
+
+</queries>

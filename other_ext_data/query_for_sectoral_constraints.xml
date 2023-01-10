@@ -147,36 +147,4 @@
 		</emissionsQueryBuilder>
 </aQuery>
 
-	<aQuery>
-	<region name="India"/>
-<supplyDemandQuery title="elec gen by subsector">
-    <axis1 name="subsector">subsector</axis1>
-    <axis2 name="Year">physical-output[@vintage]</axis2>
-    <xPath buildList="true" dataName="output" group="false" sumAll="false">*[@type='sector' (:collapse:) and (@name='electricity' or @name='elect_td_bld')]/
-               *[@type='subsector' and not (@name='elect_td_bld')]//*[@type='output' (:collapse:)]/
-               physical-output/node()</xPath>
-    <comments/>
-</supplyDemandQuery>
-
-</aQuery>
-
-	<aQuery>
-	<region name="India"/>
-<supplyDemandQuery title="industry total final energy by service">
-    <axis1 name="sector">sector</axis1>
-    <axis2 name="Year">demand-physical[@vintage]</axis2>
-    <xPath buildList="true" dataName="input" group="false" sumAll="false">*[@type='sector' and (@name='industry' or (exists(child::keyword[@final-energy='industry'])))]//
-               *[@type='input' (:collapse:) and (@name='delivered biomass' or @name='delivered coal' or
-               @name='H2 wholesale delivery' or @name='H2 wholesale dispensing' or @name='H2 industrial' or
-               @name='elect_td_ind' or @name='wholesale gas' or
-               @name='refined liquids industrial')]/demand-physical/node()</xPath>
-    <comments>process heat cement assigned to cement</comments>
-    <labelRewriteList append-values="false">
-        <level name="sector">
-            <rewrite from="process heat cement" to="cement"/>
-        </level>
-    </labelRewriteList>
-</supplyDemandQuery>
-</aQuery>
-
-</queries>
+	</queries>

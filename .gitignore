@@ -3,3 +3,6 @@
 .RData
 .Ruserdata
 *.RData
+*.rdb
+*.rdx
+scenario_comparison_cache/html/__packages
