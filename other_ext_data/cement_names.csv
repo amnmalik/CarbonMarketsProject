@@ -1,0 +1,6 @@
+process heat cement	biomass	biomass
+process heat cement	coal	coal
+process heat cement	gas	gas
+process heat cement	refined liquids	refined liquids
+cement	cement	cement
+cement	cement	cement CCS
