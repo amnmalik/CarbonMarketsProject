@@ -6,3 +6,5 @@
 *.rdb
 *.rdx
 scenario_comparison_cache/html/__packages
+*.png
+*.pdf
