@@ -126,25 +126,34 @@
 
 <aQuery>
 	<region name="India"/>
-			<emissionsQueryBuilder title="CO2 emissions by sector: TPP">
-			<axis1 name="sector">sector</axis1>
-			<axis2 name="Year">emissions</axis2>
-			<xPath buildList="false" dataName="emissions" group="false" sumAll="false">*[@type='sector']//CO2/emissions/node()[ancestor::*[(@type='sector') and (@name='elec_coal (conv pul)' or @name='elec_coal (IGCC)' or @name='elec_gas (steam/CT)' or @name='elec_gas (CC)' or @name='elec_refined liquids (steam/CT)' or @name='elec_refined liquids (CC)')]]</xPath>
-			<comments/>
-			 <labelRewriteList append-values="false">
-    <level name="sector">
+		<emissionsQueryBuilder title="CO2 emissions by sector: TPP">
+		 <axis1 name="sector">sector</axis1>
+        <axis2 name="Year">emissions</axis2>
+        <xPath buildList="false" dataName="emissions" group="false" sumAll="false">*[@type='sector']//CO2/emissions/node()[ancestor::*[(@type='sector') and (@name='elec_coal (conv pul)' or @name='elec_coal (IGCC)' or @name='elec_gas (steam/CT)' or @name='elec_gas (CC)' or @name='elec_refined liquids (steam/CT)' or @name='elec_refined liquids (CC)' or @name='elec_biomass (conv)' or @name='elec_biomass (IGCC)')]]</xPath>
+        <comments/>
+		<labelRewriteList append-values="false">
+		<level name="sector">
 	<rewrite from="elec_gas (CC CCS)" to="electricity"/>
+	 <rewrite from="elec_gas (steam/CT)" to="electricity"/>
+	  <rewrite from="elec_gas (CC)" to="electricity"/>
+	  
      <rewrite from="elec_coal (conv pul)" to="electricity"/>
      <rewrite from="elec_coal (IGCC CCS)" to="electricity"/>
-     <rewrite from="elec_gas (CC)" to="electricity"/>
      <rewrite from="elec_coal (conv pul CCS)" to="electricity"/>
+	 <rewrite from="elec_coal (IGCC)" to="electricity"/>
+	 
 	  <rewrite from="elec_refined liquids (steam/CT)" to="electricity"/>
      <rewrite from="elec_refined liquids (CC)" to="electricity"/>
-	 <rewrite from="elec_coal (IGCC)" to="electricity"/>
-	 <rewrite from="elec_gas (steam/CT)" to="electricity"/>
+	 <rewrite from="elec_refined liquids (CC CCS)" to="electricity"/>
+	 
+	 <rewrite from="elec_biomass (conv)" to="electricity"/>
+	 <rewrite from="elec_biomass (IGCC)" to="electricity"/>
+	 	 <rewrite from="elec_biomass (conv CCS)" to="electricity"/>
+	 <rewrite from="elec_biomass (IGCC CCS)" to="electricity"/>
 	    </level>
 		   </labelRewriteList>
-		</emissionsQueryBuilder>
+		   </emissionsQueryBuilder>
+		
 </aQuery>
 
 	</queries>
