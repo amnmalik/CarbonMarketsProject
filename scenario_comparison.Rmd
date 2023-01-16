@@ -1,0 +1,473 @@
+---
+title: "Scenario Comparison"
+author: "Aman Malik"
+date: "2022-11-16"
+output:
+  # github_document:
+#always_allow_html: true
+  html_document:
+    toc: yes
+    number_sections: no
+    toc_float: no
+    code_folding: hide
+    theme: cerulean
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message = F,warning = F,fig.width = 10,cache = T)
+```
+
+```{r}
+library(tidyverse)
+library(ggsci)
+library(DT)
+library(readxl)
+library(plotly)
+```
+
+Scenarios
+
+1.  No constraint
+
+2.  NZ only
+
+3.  Current Policies (includes NZ + RPS)
+
+4.  Current Policies + ETS (NZ+RPS+ETS)
+
+5.  Current Policies + ETS total (NZ+RPS+ETSAll)
+
+6.  NZ and ETS each (NZ + ETSAll)
+
+NZ + ETS
+
+7.  NZ + ETSeach EScerts carry over
+
+    ```{r}
+    main_targets_file <- read_csv("main_targets_file.csv") %>% 
+      rename("multiplier"=value) %>% 
+      pivot_longer(target_percent:abs_emiss_reduct,names_to = "variable",values_to = "value") %>% 
+      filter(sector != "Petroleum Refinery")
+    ```
+
+```{r}
+
+ggplot(main_targets_file %>% filter(variable=="target_percent"))+
+geom_bar(mapping = aes(x=year,y=value,fill=sector),stat = "identity",position = "dodge")+
+  theme_bw()+
+  scale_fill_aaas()+
+  labs(x="",y= "Reduction targets (%, compared to BAU)")
+
+ggplot(main_targets_file %>% filter(variable =="abs_emiss_reduct"))+
+geom_area(mapping = aes(x=year,y=value*3.667,fill=sector))+
+  theme_bw()+
+  scale_fill_aaas()+
+  labs(x="",y= "Absolute emission reductions (MTCO2)")
+
+ggplot(main_targets_file %>% filter(variable %in% c("abs_emiss", "abs_emiss_target")))+
+geom_line(mapping = aes(x=year,y=value*3.667,color=sector,linetype=variable))+
+  theme_bw()+
+  scale_color_aaas()+
+  labs(x="",y= "Emissions (MTCO2)")+
+  facet_wrap(~sector)
+
+```
+
+```{r}
+#Load and Display data from GCAM scenarios
+### Using two different query files because of different years
+Final_results <- read_excel("Final_results.xls") %>% 
+filter(title != "title") %>% 
+  mutate(across(c(`1990`:`2095`),as.numeric)) %>%
+  mutate(across(c(`1990`:`2095`),~round(.,digits = 2))) %>%
+  pivot_longer(`1990`:`2095`,names_to = "year",values_to = "value") %>% 
+    filter(year <2055)
+
+
+Final_results_CP<- read_excel("Final_results_cp+fe.xls") %>% 
+filter(title != "title") %>% 
+  mutate(across(c(`1990`:`2100`),as.numeric)) %>%
+  mutate(across(c(`1990`:`2100`),~round(.,digits = 2))) %>%
+  pivot_longer(`1990`:`2100`,names_to = "year",values_to = "value") %>% 
+  filter(year <2055) %>% 
+  rename("sector" = market)
+
+Final_results_CO2 <- read_excel("Final_results_CO2.xls") %>% 
+  mutate(across(c(`1990`:`2095`),as.numeric)) %>%
+  mutate(across(c(`1990`:`2095`),~round(.,digits = 2))) %>%
+  pivot_longer(`1990`:`2095`,names_to = "year",values_to = "value") %>% 
+   filter(year <2055) %>% 
+  mutate(sector = "CO2 emissions")
+  
+
+all_data <- bind_rows(Final_results,Final_results_CP,Final_results_CO2) %>% 
+  separate(col=scenario,into = c("scenario","date"),sep = ",",remove = T) %>% 
+  select(-date) %>% 
+  mutate(scenario=gsub(x = scenario,pattern = "India_",replacement = "")) %>%  
+  mutate(scenario = factor(scenario,levels = c("No_constraint",
+                                               "NZ",
+                                               "NZ+RPO",
+                                               "NZ+RPO+ETS",
+                                               "NZ+RPO+ETSAll",
+                                               "NZ+ETS",
+                                               "NZ+ETSAll")))
+
+
+                                              
+
+```
+
+#### Total emissions
+
+```{r}
+tot_em <- all_data %>% filter(sector == "CO2 emissions") 
+#%>% filter(scenario %in% c("NZ","NZ+RPO","NZ+RPO+ETSAll"))
+
+a <- ggplot()+
+  geom_line(tot_em %>% filter(year>2010),mapping = aes(x = year,y = value*3.667,color=scenario,group=scenario))+
+  theme_bw()+
+    scale_color_lancet()+
+  labs(x="",y="Total Emissions (MTCO2)")
+a
+ggplotly(a)
+```
+
+#### CO2 emissions by ETS sector and scenario
+
+```{r}
+em_sec <- all_data %>% filter(title %in% grep(x = title, pattern ="emissions by sector",value = T)) %>% 
+  mutate(value=if_else(scenario %in% c("NZ+RPO+ETS","NZ+RPO+ETSAll","NZ+ETS","NZ+ETSAll"),value/2,value))
+#%>%filter(scenario %in% c("NZ","NZ+RPO","NZ+RPO+ETSAll"))
+
+p <- ggplot(em_sec %>% filter(sector!="refining",year>2010))+
+  geom_line(mapping = aes(x = year,y = value*3.667,group=scenario,color=scenario))+
+#  geom_point(mapping = aes(x=year,y=value,group = scenario,shape=scenario,color=scenario))+
+  facet_wrap(~sector,shrink = T,scales = "free")+
+  scale_color_lancet()+
+  theme_bw()+
+  labs(x="",y="Emissions (MTCO2)")+
+ theme(axis.text.x = element_text(size = 6)) 
+
+ ggplot(em_sec %>% filter(sector!="refining",year>2010,scenario %in% c("NZ","NZ+RPO","NZ+RPO+ETSAll","NZ+ETSAll")))+
+  geom_line(mapping = aes(x = year,y = value*3.667,group=scenario,color=scenario))+
+#  geom_point(mapping = aes(x=year,y=value,group = scenario,shape=scenario,color=scenario))+
+  facet_wrap(~sector,shrink = T,scales = "free")+
+  scale_color_lancet()+
+  theme_bw()+
+  labs(x="",y="Emissions (MTCO2)")+
+ theme(axis.text.x = element_text(size = 6)) 
+
+p
+ggplotly(p)
+
+```
+
+#### Electricity generation by source
+
+```{r}
+elec_gen <- all_data %>% filter(title=="elec gen by subsector")
+
+u <- ggplot(elec_gen %>% filter(!sector %in% c("refined liquids","geothermal","hydro"),year>2010))+
+  geom_line(mapping = aes(x = year,y = value,group=scenario,color=scenario))+
+ # geom_point(mapping = aes(x=year,y=value,group = scenario,shape=scenario,color=scenario))+
+  facet_wrap(~sector,shrink = T,scales = "free")+
+  scale_color_lancet()+
+  theme_bw()+
+  labs(x="",y="Electriicty generation by source (EJ)")+
+ theme(axis.text.x = element_text(size = 6))
+
+u
+ggplotly(u)
+
+
+```
+
+#### Share of electricity generation by source
+
+```{r}
+r <- ggplot(elec_gen %>% filter(!sector %in% c("refined liquids","geothermal","hydro"),year>2010))+
+  geom_bar(mapping = aes(x=year,y=value,fill=sector),stat = "identity",position = "fill")+
+  facet_wrap(.~scenario)+
+    scale_fill_jama()+
+  theme_bw()+
+  labs(x="",y="Share of electriicty generation by source")+
+ theme(axis.text.x = element_text(size = 6))
+r
+ggplotly(r)
+  
+```
+
+#### CO2 prices
+
+```{r}
+Cprices <- all_data %>% filter(title=="CO2 prices") %>% 
+  mutate(value=value/1.98,value=value/3.667,Units = "2020$/tCO2") # inflation adjusted, 2020 USD;converting carbon price from USD/tC to USD/tCO2
+
+
+
+w <- ggplot(Cprices %>% filter(sector!="refining",year>2010))+
+  geom_line(mapping = aes(x = year,y = value,group=sector,color=sector))+
+#  geom_point(mapping = aes(x=year,y=value,group = scenario,shape=scenario,color=scenario))+
+  facet_wrap(~scenario,shrink = T)+
+  scale_color_lancet()+
+  theme_bw()+
+  labs(x="",y="CO2 Price (2020$/tCO2)",)+
+ coord_cartesian(ylim = c(0,500))+
+ theme(axis.text.x = element_text(size = 6)) 
+
+ggplot(Cprices %>% filter(sector!="refining",year>2010,scenario %in% c("NZ+RPO+ETS","NZ+RPO+ETSAll")))+
+  geom_line(mapping = aes(x = year,y = value,group=sector,color=sector))+
+#  geom_point(mapping = aes(x=year,y=value,group = scenario,shape=scenario,color=scenario))+
+  facet_wrap(~scenario,shrink = T)+
+  scale_color_lancet()+
+  theme_bw()+
+  labs(x="",y="CO2 Price (2020$/tCO2)",)+
+ coord_cartesian(ylim = c(0,500))+
+ theme(axis.text.x = element_text(size = 6)) 
+
+
+w
+ggplotly(w)
+DT::datatable(Cprices)
+```
+
+
+
+### Aggregate Final Energy
+```{r}
+fe <- all_data %>% filter(title == "total final energy by aggregate sector")
+
+k <- ggplot(fe%>% filter(year>2010))+
+  geom_line(mapping = aes(x=year,y=value,color=scenario,group=scenario))+
+  facet_wrap(~sector)+
+   scale_color_lancet()+
+  theme_bw()+
+  labs(x="",y="Aggregated Final Energy (EJ)",)+
+# coord_cartesian(ylim = c(0,2500))+
+ theme(axis.text.x = element_text(size = 6))
+
+k
+ggplotly(k)
+
+```
+
+### An RPO leads to significant emission reductions, reducing the peak in 2040 by ~ 24%.
+
+```{r}
+tot_em <- all_data %>% filter(sector == "CO2 emissions",scenario %in% c("NZ","NZ+RPO"))
+
+a <- ggplot()+
+  geom_line(tot_em %>% filter(year>2010),mapping = aes(x = year,y = value*3.667,color=scenario,group=scenario))+
+  theme_bw()+
+    scale_color_lancet()+
+  labs(x="",y="Total Emissions (MTCO2)")
+a
+ggplotly(a)
+
+```
+
+
+### Without additional policies, an RPO alone does nothing to decarbonise the industry sector. 
+```{r}
+em_sec <- all_data %>% filter(title %in% grep(x = title, pattern ="emissions by sector",value = T),scenario %in% c("NZ","NZ+RPO"),sector!="refining") %>% select(-title,-Units,-region) %>% 
+  pivot_wider(names_from = scenario,values_from = value) %>% 
+  mutate(change=((`NZ+RPO`-`NZ`)/`NZ`)*100)
+ 
+ 
+blah <- ggplot(em_sec %>% filter(year>2010))+
+  geom_line(mapping = aes(x=year,y=change,color=sector,group=sector))+
+  theme_bw()+
+    scale_color_lancet()+
+  labs(x="",y = "change (%)",subtitle ="Change in emissions (%) | NZ+RPO vs. NZ")
+ggplotly(blah)
+
+  
+
+
+```
+
+
+```{r}
+#Change in emissions NZ+RPO+ETS and NZ+RPO+ETSAll
+
+em_sec <- all_data %>% filter(title %in% grep(x = title, pattern ="emissions by sector",value = T),scenario %in% c("NZ+RPO","NZ+RPO+ETS","NZ+RPO+ETSAll"),sector!="refining") %>%
+  mutate(value=if_else(scenario %in% c("NZ+RPO+ETS","NZ+RPO+ETSAll","NZ+ETS","NZ+ETSAll"),value/2,value)) %>% select(-title,-Units,-region) %>% 
+  pivot_wider(names_from = scenario,values_from = value) %>%
+  mutate(change_ets=((`NZ+RPO+ETS`-`NZ+RPO`)/`NZ+RPO`)*100,
+         change_etsall=((`NZ+RPO+ETSAll`-`NZ+RPO`)/`NZ+RPO`)*100) %>% 
+  select(-c(3:5)) %>% 
+  pivot_longer(cols = c(3:4),names_to = "scenario",values_to = "value")
+
+a1 <- ggplot(em_sec %>% filter(year>2010))+
+  geom_line(mapping = aes(x=year,y=value,color=sector,group=interaction(sector,scenario),linetype=scenario))+
+  theme_bw()+
+    scale_color_lancet()+
+  labs(x="",y = "change (%)",subtitle ="Change in emissions compared\n to a NZ + RPO scenario (%)")
+    
+```
+
+```{r}
+
+# Change in sectoral emissions compared to a NZ scenario (w/o RPO)
+em_sec <- all_data %>% filter(title %in% grep(x = title, pattern ="emissions by sector",value = T),scenario %in% c("NZ","NZ+ETS","NZ+ETSAll"),sector!="refining") %>%
+  mutate(value=if_else(scenario %in% c("NZ+RPO+ETS","NZ+RPO+ETSAll","NZ+ETS","NZ+ETSAll"),value/2,value)) %>% select(-title,-Units,-region) %>% 
+  pivot_wider(names_from = scenario,values_from = value) %>%
+  mutate(change_ets=((`NZ+ETS`-`NZ`)/`NZ`)*100,
+         change_etsall=((`NZ+ETSAll`-`NZ`)/`NZ`)*100) %>% 
+  select(-c(3:5)) %>% 
+  pivot_longer(cols = c(3:4),names_to = "scenario",values_to = "value")
+
+b1 <- ggplot(em_sec %>% filter(year>2010))+
+  geom_line(mapping = aes(x=year,y=value,color=sector,group=interaction(sector,scenario),linetype=scenario))+
+  theme_bw()+
+    scale_color_lancet()+
+  labs(x="",y = "change (%)",subtitle ="Change in emissions compared \n to a NZ scenario (%)")
+
+library(patchwork)
+a1+b1+ plot_layout(guides = 'collect')
+    
+```
+
+### When  constraint is sector-wide, the electricity sector does bulk of the emission reductions; only sector where reductions are higher than required.
+
+### In the absence of an RPO, the electricity sector shares even a greater burden
+
+```{r}
+em_sec1 <- all_data %>% filter(title %in% grep(x = title, pattern ="emissions by sector",value = T),scenario %in% c("NZ+RPO","NZ+RPO+ETS","NZ+RPO+ETSAll"),sector!="refining") %>%
+  mutate(value=if_else(scenario %in% c("NZ+RPO+ETS","NZ+RPO+ETSAll","NZ+ETS","NZ+ETSAll"),value/2,value)) %>% select(-title,-Units,-region) %>% 
+  pivot_wider(names_from = scenario,values_from = value) %>%
+  mutate(ETS=`NZ+RPO+ETS`-`NZ+RPO`,
+         ETSAll=`NZ+RPO+ETSAll`-`NZ+RPO`) %>% 
+  select(-c(3:5)) %>% 
+  pivot_longer(cols = c(3:4),names_to = "scenario",values_to = "value")
+
+em_sec1 %>% group_by(year,scenario) %>% summarise(value=sum(value))
+
+a2 <- ggplot(em_sec1 %>% filter(year>2010))+
+  geom_line(mapping = aes(x=year,y=value,color=sector,group=interaction(sector,scenario),linetype=scenario))+
+  theme_bw()+
+    scale_color_lancet()+
+  labs(x="",y = "change (MTCO2)",subtitle ="Change in abs. emissions compared\n to a NZ + RPO scenario (MTCO2)")+
+  coord_cartesian(ylim = c(-250,50))
+
+em_sec2 <- all_data %>% filter(title %in% grep(x = title, pattern ="emissions by sector",value = T),scenario %in% c("NZ","NZ+ETS","NZ+ETSAll"),sector!="refining") %>%
+  mutate(value=if_else(scenario %in% c("NZ+RPO+ETS","NZ+RPO+ETSAll","NZ+ETS","NZ+ETSAll"),value/2,value)) %>% select(-title,-Units,-region) %>% 
+  pivot_wider(names_from = scenario,values_from = value) %>%
+  mutate(ETS=`NZ+ETS`-`NZ`,
+         ETSAll=`NZ+ETSAll`-`NZ`)%>% 
+  select(-c(3:5)) %>% 
+  pivot_longer(cols = c(3:4),names_to = "scenario",values_to = "value")
+
+b2 <- ggplot(em_sec2 %>% filter(year>2010))+
+  geom_line(mapping = aes(x=year,y=value,color=sector,group=interaction(sector,scenario),linetype=scenario))+
+  theme_bw()+
+    scale_color_lancet()+
+  labs(x="",y = "change (MTCO2)",subtitle ="Change in abs. emissions compared\n to a NZ scenario (MTCO2)")+
+  coord_cartesian(ylim = c(-250,50))
+
+library(patchwork)
+a2+b2+ plot_layout(guides = 'collect')
+    
+
+```
+
+
+
+### Where are emissions cheapest?
+
+```{r}
+em_sec1 <- all_data %>% filter(title %in% grep(x = title, pattern ="emissions by sector",value = T),sector!="refining") %>%
+  mutate(value=if_else(scenario %in% c("NZ+RPO+ETS","NZ+RPO+ETSAll","NZ+ETS","NZ+ETSAll"),value/2,value)) %>% select(-title,-Units,-region) %>% 
+  pivot_wider(names_from = scenario,values_from = value) %>%
+  mutate(`RPO+ETS`=`NZ+RPO+ETS`-`NZ`,
+         ETS=`NZ+ETS`-`NZ`,
+         ETSAll=`NZ+ETSAll`-`NZ`,
+         `RPO+ETSAll`=`NZ+RPO+ETSAll`-`NZ`) %>% 
+  select(-(`NZ+ETS`:`NZ`)) %>% 
+  pivot_longer(3:6,names_to = "scenario",values_to = "value") 
+  
+  
+Cprices <- all_data %>% filter(title=="CO2 prices") %>% 
+  mutate(value=value/1.98,value=value*3.667,Units = "2020$/tCO2") %>% 
+  filter(!scenario %in% c("NZ","NZ+RPO")) %>% 
+  mutate(scenario=gsub(scenario,pattern = "NZ\\+",replacement = "")) %>% 
+  select(sector,year,scenario,value) %>% 
+  mutate(sector=mgsub::mgsub(sector, pattern = c("IndiaCO2Alu","IndiaCO2Cement","IndiaCO2Elec","IndiaCO2Fert","IndiaCO2IRSTL"),replacement = c("alumina","cement","electricity","N fertilizer","iron and steel") ))
+
+join <- left_join(em_sec1 %>% filter(!scenario %in% c("ETSAll","RPO+ETSAll")),Cprices %>% filter(!scenario %in% c("ETSAll","RPO+ETSAll"),sector!="all"),by=c("year","scenario","sector")) %>% 
+  filter(year>2020) %>% 
+  mutate(abatement_cost=-(value.x*value.y),unit="Million dollars") %>% 
+  dplyr::group_by(scenario,year,unit) %>% 
+  summarise(sum=sum(abatement_cost))
+
+emsec2 <- em_sec1 %>% filter(!scenario %in% c("ETS","RPO+ETS")) %>% 
+  group_by(year,scenario) %>% 
+  summarise(value=sum(value))
+  
+Cprices2 <- Cprices %>% filter(!scenario %in% c("ETS","RPO+ETS")) %>% 
+  filter(sector!="IndiaCO2")
+
+
+join2 <- left_join(Cprices2,emsec2,by=c("year","scenario")) %>% 
+  filter(year>2020) %>% 
+  mutate(sum=-(value.x*value.y),unit="Million dollars") 
+
+total_join <- bind_rows(join %>% select(scenario,year,sum,unit),
+join2 %>% select(scenario,year,sum,unit))
+
+ggplot()+
+  geom_bar(total_join %>% filter(year<2045),mapping = aes(x = year,y=sum/1000,fill=scenario),stat = "identity",position = "dodge")+
+  labs(y="Total mitigation cost (billion 2020USD)",x="")+
+  scale_fill_lancet()+
+  theme_bw()
+ 
+
+# jp <- ggplot(join %>% filter(year>2010))+
+#   geom_line(mapping = aes(x=year,y=red_per_dollar,group=sector,color=sector))+
+#   theme_bw()+
+#     scale_color_lancet()+
+#   labs(x="",y = "change",subtitle ="Change in CO2 emissions (in thousands) per dollar")
+# 
+# jp
+
+```
+### What is happening to cement production?
+
+```{r}
+production <- all_data %>% filter(title %in% grep(title,pattern = "production",value = T))
+
+elec_gen <- all_data %>% filter(title=="elec gen by subsector")
+elec_gen <- elec_gen %>% group_by(title,region,scenario,Units,year) %>% 
+  dplyr::summarise(value=sum(value)) %>% mutate(sector = "elec gen")
+
+production <- bind_rows(production,elec_gen)
+
+z <- ggplot(production %>% filter(year>2010))+
+  geom_line(mapping = aes(x = year,y = value,group=scenario,color=scenario))+
+#  geom_point(mapping = aes(x=year,y=value,group = scenario,shape=scenario,color=scenario))+
+  facet_wrap(~sector,shrink = T,scales = "free")+
+  scale_color_lancet()+
+  theme_bw()+
+  labs(x="",y="Production (MT or EJ)",)+
+# coord_cartesian(ylim = c(0,2500))+
+ theme(axis.text.x = element_text(size = 6)) 
+z
+ggplotly(z)
+```
+
+
+```{r}
+
+feprices <- all_data %>% filter(title == "fuel prices to industry")
+
+ggplot(feprices)+
+  geom_line(mapping = aes(x=year,y=value,color=scenario,group=scenario))+
+  facet_wrap(~sector)+
+  scale_color_lancet()
+  
+
+```
+
+
