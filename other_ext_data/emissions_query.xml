@@ -46,7 +46,7 @@
 </supplyDemandQuery>
 </aQuery>
 
-	<aQuery>
+<!-- 	<aQuery>
 	<region name="India"/>
 		<supplyDemandQuery title="elec gen by subsector: TPP">
 			<axis1 name="subsector">subsector</axis1>
@@ -63,7 +63,7 @@
 	    </level>
 		   </labelRewriteList>
 			</supplyDemandQuery>
-	</aQuery>
+	</aQuery> -->
 	
 
 <aQuery>
@@ -126,25 +126,34 @@
 
 <aQuery>
 	<region name="India"/>
-			<emissionsQueryBuilder title="CO2 emissions by sector: TPP">
-			<axis1 name="sector">sector</axis1>
-			<axis2 name="Year">emissions</axis2>
-			<xPath buildList="false" dataName="emissions" group="false" sumAll="false">*[@type='sector']//CO2/emissions/node()[ancestor::*[(@type='sector') and (@name='elec_coal (conv pul)' or @name='elec_coal (IGCC)' or @name='elec_gas (steam/CT)' or @name='elec_gas (CC)' or @name='elec_refined liquids (steam/CT)' or @name='elec_refined liquids (CC)')]]</xPath>
-			<comments/>
-			 <labelRewriteList append-values="false">
-    <level name="sector">
+		<emissionsQueryBuilder title="CO2 emissions by sector: TPP">
+		 <axis1 name="sector">sector</axis1>
+        <axis2 name="Year">emissions</axis2>
+        <xPath buildList="false" dataName="emissions" group="false" sumAll="false">*[@type='sector']//CO2/emissions/node()[ancestor::*[(@type='sector') and (@name='elec_coal (conv pul)' or @name='elec_coal (IGCC)' or @name='elec_gas (steam/CT)' or @name='elec_gas (CC)' or @name='elec_refined liquids (steam/CT)' or @name='elec_refined liquids (CC)' or @name='elec_biomass (conv)' or @name='elec_biomass (IGCC)')]]</xPath>
+        <comments/>
+		<labelRewriteList append-values="false">
+		<level name="sector">
 	<rewrite from="elec_gas (CC CCS)" to="electricity"/>
+	 <rewrite from="elec_gas (steam/CT)" to="electricity"/>
+	  <rewrite from="elec_gas (CC)" to="electricity"/>
+	  
      <rewrite from="elec_coal (conv pul)" to="electricity"/>
      <rewrite from="elec_coal (IGCC CCS)" to="electricity"/>
-     <rewrite from="elec_gas (CC)" to="electricity"/>
      <rewrite from="elec_coal (conv pul CCS)" to="electricity"/>
+	 <rewrite from="elec_coal (IGCC)" to="electricity"/>
+	 
 	  <rewrite from="elec_refined liquids (steam/CT)" to="electricity"/>
      <rewrite from="elec_refined liquids (CC)" to="electricity"/>
-	 <rewrite from="elec_coal (IGCC)" to="electricity"/>
-	 <rewrite from="elec_gas (steam/CT)" to="electricity"/>
+	 <rewrite from="elec_refined liquids (CC CCS)" to="electricity"/>
+	 
+	 <rewrite from="elec_biomass (conv)" to="electricity"/>
+	 <rewrite from="elec_biomass (IGCC)" to="electricity"/>
+	 	 <rewrite from="elec_biomass (conv CCS)" to="electricity"/>
+	 <rewrite from="elec_biomass (IGCC CCS)" to="electricity"/>
 	    </level>
 		   </labelRewriteList>
-		</emissionsQueryBuilder>
+		   </emissionsQueryBuilder>
+		
 </aQuery>
 
 	<aQuery>
@@ -160,7 +169,7 @@
 
 </aQuery>
 
-	<aQuery>
+<!-- 	<aQuery>
 	<region name="India"/>
 <supplyDemandQuery title="industry total final energy by service">
     <axis1 name="sector">sector</axis1>
@@ -177,6 +186,62 @@
         </level>
     </labelRewriteList>
 </supplyDemandQuery>
-</aQuery>
+</aQuery> -->
 
+<aQuery>
+	<region name="India"/>
+<supplyDemandQuery title="total final energy by aggregate sector">
+    <axis1 name="sector">sector</axis1>
+    <axis2 name="Year">demand-physical[@vintage]</axis2>
+    <xPath buildList="true" dataName="input" group="false" sumAll="false">*[@type='sector' and ((@name='building' or @name='industry' or @name='transportation') or
+            (exists(child::keyword/@final-energy)))]//*[@type='input' (:collapse:) and
+            not(@name='limestone' or @name='process heat cement' or @name='industrial energy use' or
+                @name='industrial feedstocks' or @name='renewable' or contains(@name, 'trn_') or @name='oil-credits')]/
+            demand-physical[@unit='EJ']/node()</xPath>
+    <comments/>
+    <labelRewriteList append-values="false">
+        <level name="sector">
+            <rewrite from="trn_pass_road_LDV_4W" to="transportation"/>
+            <rewrite from="mining energy use" to="industry"/>
+            <rewrite from="trn_pass_road_LDV_2W" to="transportation"/>
+            <rewrite from="comm heating" to="building"/>
+            <rewrite from="industrial wastewater treatment" to="industry"/>
+            <rewrite from="comm cooling" to="building"/>
+            <rewrite from="municipal wastewater treatment" to="industry"/>
+            <rewrite from="irrigation water abstraction" to="industry"/>
+            <rewrite from="aluminum" to="industry"/>
+            <rewrite from="agricultural energy use" to="industry"/>
+            <rewrite from="other industrial energy use" to="industry"/>
+            <rewrite from="chemical energy use" to="industry"/>
+            <rewrite from="trn_pass_road_LDV" to="transportation"/>
+            <rewrite from="trn_pass_road_bus" to="transportation"/>
+            <rewrite from="trn_aviation_intl" to="transportation"/>
+            <rewrite from="alumina" to="industry"/>
+            <rewrite from="industrial water abstraction" to="industry"/>
+            <rewrite from="resid heating" to="building"/>
+            <rewrite from="process heat cement" to="industry"/>
+            <rewrite from="chemical feedstocks" to="industry"/>
+            <rewrite from="trn_shipping_intl" to="transportation"/>
+            <rewrite from="industrial water treatment" to="industry"/>
+            <rewrite from="trn_pass_road" to="transportation"/>
+            <rewrite from="construction feedstocks" to="industry"/>
+            <rewrite from="trn_freight_road" to="transportation"/>
+            <rewrite from="iron and steel" to="industry"/>
+            <rewrite from="trn_freight" to="transportation"/>
+            <rewrite from="comm others" to="building"/>
+            <rewrite from="municipal water distribution" to="industry"/>
+            <rewrite from="municipal water treatment" to="industry"/>
+            <rewrite from="desalinated water" to="industry"/>
+            <rewrite from="trn_pass" to="transportation"/>
+            <rewrite from="cement" to="industry"/>
+            <rewrite from="N fertilizer" to="industry"/>
+            <rewrite from="resid others" to="building"/>
+            <rewrite from="resid cooling" to="building"/>
+            <rewrite from="construction energy use" to="industry"/>
+            <rewrite from="municipal water abstraction" to="industry"/>
+            <rewrite from="other industrial feedstocks" to="industry"/>
+        </level>
+    </labelRewriteList>
+</supplyDemandQuery>
+</aQuery>
 </queries>
