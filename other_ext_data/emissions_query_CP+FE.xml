@@ -10,6 +10,16 @@
 </marketQuery>
 </aQuery>
 
+<aQuery>
+	<region name="India"/>
+	<gdpQueryBuilder title="GDP per capita MER by region">
+    <axis1 name="region">region</axis1>
+    <axis2 name="Year">gdp-per-capita-mer</axis2>
+    <xPath buildList="true" dataName="gdp-per-capita-mer" group="false" sumAll="false">GDP/gdp-per-capita-mer/text()</xPath>
+    <comments/>
+</gdpQueryBuilder>
+</aQuery>
+
 	<aQuery>
 	<region name="India"/>
 <supplyDemandQuery title="fuel prices to industry">
@@ -20,6 +30,27 @@
                @name='refined liquids industrial')]/cost/text()</xPath>
     <comments/>
 </supplyDemandQuery>
+</aQuery>
+
+	<aQuery>
+	<region name="India"/>
+<gdpQueryBuilder title="GDP MER by region">
+    <axis1 name="region">region</axis1>
+    <axis2 name="Year">gdp-mer</axis2>
+    <xPath buildList="true" dataName="gdp-mer" group="false" sumAll="false">GDP/gdp-mer/text()</xPath>
+    <comments/>
+</gdpQueryBuilder>
+</aQuery>
+
+
+<aQuery>
+	<region name="India"/>
+<demographicsQuery title="population by region">
+    <axis1 name="region">region</axis1>
+    <axis2 name="Year">populationMiniCAM</axis2>
+    <xPath buildList="true" dataName="total-population" group="false" sumAll="false">demographics/populationMiniCAM/total-population/node()</xPath>
+    <comments/>
+</demographicsQuery>
 </aQuery>
 
 

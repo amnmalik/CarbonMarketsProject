@@ -1,6 +1,19 @@
 <queries> 
 <aQuery>
 	<region name="India"/>
+<supplyDemandQuery title="elec gen by region (incl CHP)">
+    <axis1 name="region">region</axis1>
+    <axis2 name="Year">physical-output[@vintage]</axis2>
+    <xPath buildList="true" dataName="output" group="false" sumAll="true">*[@type='sector' (:collapse:)]//
+               *[@type='technology' (:collapse:) and not (@name='elect_td_bld')]/
+               *[@type='output' (:collapse:)  and (@name='electricity' or @name='elect_td_bld')]/
+               physical-output/node()</xPath>
+    <comments/>
+</supplyDemandQuery>
+</aQuery>
+
+<aQuery>
+	<region name="India"/>
 <emissionsQueryBuilder title="CO2 emissions by region">
     <axis1 name="region">region</axis1>
     <axis2 name="Year">emissions</axis2>
@@ -8,5 +21,4 @@
     <comments/>
 </emissionsQueryBuilder>
 </aQuery>
-
 </queries>
