@@ -332,7 +332,9 @@ em_sec_join <- left_join(combined, em_sec_nz, by = c("title", "sector", "region"
 
 
 
-ggplot(em_sec_join %>% filter(sector != "Petroleum Refinery", sector %in% common, year > 2015, year < 2055, scenario.x %in% c("NZ", "NZ+ETS", "NZ+CC"))) +
+ggplot(em_sec_join %>% filter(sector != "Petroleum Refinery", sector %in% common, year > 2015, year < 2055 #scenario.x %in% c("NZ", "NZ+ETS", "NZ+CC")
+                              
+                            )) +
   geom_textline(mapping = aes(x = year, y = change, label = label, color = label, group = scenario.x), vjust = 0.2, rich = TRUE, size = 2,show.legend = F) +
   facet_wrap(~sector) +
   theme_bw() +
