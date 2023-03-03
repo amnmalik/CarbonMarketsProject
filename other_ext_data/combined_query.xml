@@ -35,7 +35,7 @@
 </supplyDemandQuery>
 	</aQuery>
 	
-<!-- 	<aQuery>
+	<aQuery>
 	<region name="India"/>
 <supplyDemandQuery title="aluminum production by region">
     <axis1 name="sector">sector</axis1>
@@ -45,7 +45,7 @@
                *[@type='output' (:collapse:)]/physical-output/node()</xPath>
     <comments/>
 </supplyDemandQuery>
-</aQuery> -->
+</aQuery>
 
 <!-- 	<aQuery>
 	<region name="India"/>
@@ -104,7 +104,7 @@
 
 </aQuery>
 
-<!-- <aQuery>
+<aQuery>
 	<region name="India"/>
 	<emissionsQueryBuilder title="CO2 emissions by sector: Alumina">
 		<axis1 name="sector">sector</axis1>
@@ -112,7 +112,7 @@
 		<xPath buildList="false" dataName="emissions" group="false" sumAll="false">*[@type='sector']//CO2/emissions/node()[ancestor::*[(@type='sector') and (@name='alumina')]]</xPath>
 		<comments/>
 	</emissionsQueryBuilder>
-</aQuery> -->
+</aQuery>
 
 <aQuery>
 	<region name="India"/>
@@ -124,7 +124,7 @@
 	</emissionsQueryBuilder>
 </aQuery>
 
-<!-- 
+
 <aQuery>
 	<region name="India"/>
 		<emissionsQueryBuilder title="CO2 emissions by sector: TPP">
@@ -155,7 +155,7 @@
 		   </labelRewriteList>
 		   </emissionsQueryBuilder>
 		
-</aQuery> -->
+</aQuery>
 <aQuery>
 	<region name="India"/>
 		<emissionsQueryBuilder title="CO2 emissions in electricity sector">
@@ -424,7 +424,103 @@
     <comments>doesn't include rooftop PV</comments>
 </supplyDemandQuery>
 </aQuery>
+<aQuery>
+	<region name="India"/>
+<supplyDemandQuery title="elec gen by region (incl CHP)">
+    <axis1 name="region">region</axis1>
+    <axis2 name="Year">physical-output[@vintage]</axis2>
+    <xPath buildList="true" dataName="output" group="false" sumAll="true">*[@type='sector' (:collapse:)]//
+               *[@type='technology' (:collapse:) and not (@name='elect_td_bld')]/
+               *[@type='output' (:collapse:)  and (@name='electricity' or @name='elect_td_bld')]/
+               physical-output/node()</xPath>
+    <comments/>
+</supplyDemandQuery>
+</aQuery>
 
+<aQuery>
+	<region name="India"/>
+<emissionsQueryBuilder title="CO2 emissions by region">
+    <axis1 name="region">region</axis1>
+    <axis2 name="Year">emissions</axis2>
+    <xPath buildList="true" dataName="emissions" group="false" sumAll="false">*[@type = 'sector'  or @type = 'resource' (:collapse:)](: / *[@type = 'subresource' (: collapse :)] :)//*[((@name='CO2'))]/emissions/node()</xPath>
+    <comments/>
+</emissionsQueryBuilder>
+</aQuery>
+		<aQuery>
+	<region name="India"/>
+<marketQuery title="CO2 prices">
+    <axis1 name="market">market</axis1>
+    <axis2 name="Year">market</axis2>
+    <xPath buildList="true" dataName="price" group="false" sumAll="false">Marketplace/market[true() and contains(@name,'CO2')]/price/node()</xPath>
+    <comments/>
+</marketQuery>
+</aQuery>
+
+<aQuery>
+	<region name="India"/>
+	<gdpQueryBuilder title="GDP per capita MER by region">
+    <axis1 name="region">region</axis1>
+    <axis2 name="Year">gdp-per-capita-mer</axis2>
+    <xPath buildList="true" dataName="gdp-per-capita-mer" group="false" sumAll="false">GDP/gdp-per-capita-mer/text()</xPath>
+    <comments/>
+</gdpQueryBuilder>
+</aQuery>
+
+	<aQuery>
+	<region name="India"/>
+<supplyDemandQuery title="fuel prices to industry">
+    <axis1 name="fuel">sector</axis1>
+    <axis2 name="Year">cost</axis2>
+    <xPath buildList="true" dataName="cost" group="false" sumAll="false">*[@type='sector' and (@name='wholesale gas' or @name='delivered coal' or
+               @name='delivered biomass' or @name='H2 industrial' or @name='elect_td_ind' or
+               @name='refined liquids industrial')]/cost/text()</xPath>
+    <comments/>
+</supplyDemandQuery>
+</aQuery>
+
+	<aQuery>
+	<region name="India"/>
+<gdpQueryBuilder title="GDP MER by region">
+    <axis1 name="region">region</axis1>
+    <axis2 name="Year">gdp-mer</axis2>
+    <xPath buildList="true" dataName="gdp-mer" group="false" sumAll="false">GDP/gdp-mer/text()</xPath>
+    <comments/>
+</gdpQueryBuilder>
+</aQuery>
+
+
+<aQuery>
+	<region name="India"/>
+<demographicsQuery title="population by region">
+    <axis1 name="region">region</axis1>
+    <axis2 name="Year">populationMiniCAM</axis2>
+    <xPath buildList="true" dataName="total-population" group="false" sumAll="false">demographics/populationMiniCAM/total-population/node()</xPath>
+    <comments/>
+</demographicsQuery>
+</aQuery>
+
+<aQuery>
+	<region name="India"/>
+<supplyDemandQuery title="industry final energy by tech and fuel">
+    <axis1 name="technology">technology</axis1>
+    <axis2 name="Year">demand-physical[@vintage]</axis2>
+    <xPath buildList="true" dataName="input" group="false" sumAll="false">*[@type='sector' and (@name='industry' or (exists(child::keyword[@final-energy='industry'])))]/
+               *[@type='subsector']/*[@type='technology']/
+               *[@type='input' and (@name='delivered biomass' or @name='delivered coal' or
+               @name='H2 wholesale delivery' or @name='H2 wholesale dispensing' or @name='H2 industrial' or
+               @name='elect_td_ind' or @name='wholesale gas' or
+               @name='refined liquids industrial')]/demand-physical/node()</xPath>
+			     <comments/>
+		<labelRewriteList append-values="false">
+        <level name="input">
+		<rewrite from="process heat cement" to="cement"/>
+		<rewrite from = "H2 industrial" to = "H2"/>
+		<rewrite from = "H2 wholesale delivery" to = "H2"/>
+		<rewrite from = "H2 wholesale dispensing" to = "H2"/>
+		</level>
+		  </labelRewriteList>
+</supplyDemandQuery>
+	</aQuery>
 
 
 </queries>
