@@ -34,7 +34,9 @@
 </supplyDemandQuery>
 	</aQuery>
 	
-<!-- 	<aQuery>
+
+<!-- 	
+	<aQuery>
 	<region name="India"/>
 <supplyDemandQuery title="aluminum production by region">
     <axis1 name="sector">sector</axis1>
@@ -44,29 +46,24 @@
                *[@type='output' (:collapse:)]/physical-output/node()</xPath>
     <comments/>
 </supplyDemandQuery>
-</aQuery> -->
+</aQuery>
 
 	<aQuery>
 	<region name="India"/>
-		<supplyDemandQuery title="elec gen by subsector: TPP">
-			<axis1 name="subsector">subsector</axis1>
-			<axis2 name="Year">physical-output[@vintage]</axis2>
-			<xPath buildList="false" dataName="output" group="false" sumAll="false">*[@type='sector' (:collapse:) and (@name='electricity' or @name='elect_td_bld')]/
-				   *[@type='subsector' and not (@name='elect_td_bld')]//*[@type='output' (:collapse:)]/
-				   physical-output/node()[ancestor::*[(@type='subsector' ) and (@name='coal' or @name='gas' or @name='refined liquids')]]</xPath>
-			<comments/>
-			 <labelRewriteList append-values="false">
-    <level name="subsector">
-	 <rewrite from="coal" to="electricityTPP"/>
-	 <rewrite from="gas" to="electricityTPP"/>
-	 <rewrite from="refined liquids" to="electricityTPP"/>
-	    </level>
-		   </labelRewriteList>
-			</supplyDemandQuery>
+	<supplyDemandQuery title="elec gen by region (incl CHP)">
+    <axis1 name="region">region</axis1>
+    <axis2 name="Year">physical-output[@vintage]</axis2>
+    <xPath buildList="true" dataName="output" group="false" sumAll="true">*[@type='sector' (:collapse:)]//
+               *[@type='technology' (:collapse:) and not (@name='elect_td_bld')]/
+               *[@type='output' (:collapse:)  and (@name='electricity' or @name='elect_td_bld')]/
+               physical-output/node()</xPath>
+    <comments/>
+</supplyDemandQuery>
+
 	</aQuery>
 	
 
-<!-- <aQuery>
+<aQuery>
 	<region name="India"/>
 	<emissionsQueryBuilder title="CO2 emissions by sector: refining">
 		<axis1 name="sector">sector</axis1>
@@ -74,8 +71,8 @@
 		<xPath buildList="false" dataName="emissions" group="false" sumAll="false">*[@type='sector']//CO2/emissions/node()[ancestor::*[(@type='sector') and (@name='refining')]]</xPath>
 		<comments/>
 	</emissionsQueryBuilder>
-</aQuery> -->
-
+</aQuery>
+ -->
 <aQuery>
 	<region name="India"/>
 	<emissionsQueryBuilder title="CO2 emissions by sector: iron and steel">
