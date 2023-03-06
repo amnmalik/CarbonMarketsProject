@@ -28,6 +28,7 @@ knitr::opts_chunk$set(echo = TRUE, message = F, warning = F,cache = T)
 ```{r}
 library(tidyverse)
 library(ggsci)
+library(ggpubr)
 # library(hrbrthemes)
 library(geomtextpath)
 library(DT)
@@ -275,15 +276,122 @@ kaya2 <- left_join(kaya,kaya_ref,by=c("title","scenario","sector","Units")) %>%
          value= round(value, 2))
 
 ggplot(kaya2 %>% filter(year.x > 2010,year.x<2075)) +
-  geom_line(mapping = aes(x = year.x, y = value, color = title, group = title)) +
-  theme_bw(base_size = 12) +
+  geom_line(mapping = aes(x = year.x, y = value, color = title, group = title),linewidth=1.5) +
+  theme_pubclean() +
   scale_color_lancet() +
   labs(x = "", y = "Change rel. to 2015", subtitle = "Drivers of emission change: Kaya identity") +
-  theme(legend.position = c(0.2, 0.8), legend.title = element_blank(), legend.box.background = element_rect(colour = "black"))
+  theme(legend.position = c(0.25, 0.8), legend.title = element_blank(), legend.box.background = element_rect(colour = "black"))
 
 ggsave("output_plots/kaya.png",
   device = "png", dpi = "print",
   width = 7, height = 5
+)
+```
+
+# NZ scenario emissions and production
+```{r}
+## Emissions
+em_sec_nz <- all_data %>%
+  filter(
+    sector %in% common,
+    title %in% grep(x = title, pattern = "emissions by sector", value = T),
+    scenario == "NZ"
+  ) %>%
+  mutate(category = "Emissions (MtCO2)")
+
+# Production
+prod_nz <- all_data %>%
+  filter(title %in% grep(
+    x = title,
+    pattern = "production",
+    value = T
+  ), scenario == "NZ")
+
+# Separate electricity generation
+elec_gen_nz <- all_data %>%
+  mutate(year = as.numeric(year)) %>%
+  filter(title == "elec gen by subsector", scenario == "NZ") %>%
+  group_by(title, scenario, region, Units, year) %>%
+  summarise(value = sum(value)) %>%
+  mutate( # value=value*277.78,Units="TWh",
+    year = as.character(year), sector = "Electricity"
+  )
+
+
+
+# combining production and elec generation
+prod_tot <- bind_rows(prod_nz, elec_gen_nz) %>%
+  mutate(category = "Production (Mt or EJ)")
+
+# Combining emissions and production quantities
+overall <- bind_rows(em_sec_nz, prod_tot)
+
+
+a <- ggplot(overall %>% filter(year < 2075, year > 2010, sector != "Aluminium")) +
+  geom_line(aes(x = year, y = value, color = category, group = category)) +
+  facet_wrap(~sector, scales = "free") +
+  theme_pubclean() +
+  labs(
+    x = "", y = "Production and emissions (MTCO2)", color = "",
+  ) +
+  scale_color_lancet() +
+  theme(legend.position = "top", axis.text.x = element_text(size = 7, angle = 45, vjust = 0.8, hjust = 0.8))
+
+ggsave("output_plots/prod_emiss_nz.png",
+  device = "png", dpi = "print",
+  width = 8, height = 6
+)
+
+elec_gen_tech_nz <- all_data %>%
+  mutate(year = as.numeric(year)) %>%
+  filter(title == "elec gen by subsector", scenario == "NZ") %>%
+  # distinct() %>%
+  pivot_wider(names_from = sector, values_from = value) %>%
+  mutate(`solar` = `solar` + `rooftop_pv`) %>%
+  select(-`rooftop_pv`) %>%
+  pivot_longer(cols = `biomass`:`wind`, names_to = "sector", values_to = "value")
+
+b <- ggplot() +
+  geom_area(
+    elec_gen_tech_nz %>% filter(
+      year < 2075, year > 2005,
+      !sector %in% c("geothermal", "refined liquids")
+    ),
+    mapping = aes(x = year, y = value, fill = sector, group = sector)
+  ) +
+  scale_fill_igv() +
+  theme_pubclean() +
+  theme(legend.position = "top") +
+  guides(fill = guide_legend(nrow = 2)) +
+  labs(
+    x = "",
+    # subtitle = "Electricity generation by sector (EJ)",
+    y = "Electricity generation (EJ)",
+    fill = ""
+  ) +
+  scale_x_continuous(breaks = seq(2010, 2070, by = 10))
+
+
+
+
+# c <- ggplot(em_sec_nz %>% filter(sector == "Electricity", year < 2075, year > 2005)) +
+#   geom_line(aes(x = year, y = value * 3.667, color = sector, group = sector), show.legend = F) +
+#   scale_color_lancet() +
+#   theme_bw() +
+#   labs(
+#     x = "",
+#     #  y = "Emissions (MTCO2)",
+#     y = "",
+#     subtitle = "Electricity sector emissions (MTCO2)"
+#   ) +
+#   theme(axis.text.x = element_text(size = 7, angle = 45, vjust = 0.8, hjust = 0.8))
+
+library(patchwork)
+a | (b) 
+
+ggsave("output_plots/pathwork_emissions_production.png",
+  device = "png", dpi = "print",
+  width = 8, height = 6
 )
 ```
 
@@ -475,112 +583,7 @@ ggsave("output_plots/patchwork_emissions.png",
 )
 ```
 
-# NZ scenario emissions and production
-```{r}
-## Emissions
-em_sec_nz <- all_data %>%
-  filter(
-    sector %in% common,
-    title %in% grep(x = title, pattern = "emissions by sector", value = T),
-    scenario == "NZ"
-  ) %>%
-  mutate(category = "Emissions")
 
-# Production
-prod_nz <- all_data %>%
-  filter(title %in% grep(
-    x = title,
-    pattern = "production",
-    value = T
-  ), scenario == "NZ")
-
-# Separate electricity generation
-elec_gen_nz <- all_data %>%
-  mutate(year = as.numeric(year)) %>%
-  filter(title == "elec gen by subsector", scenario == "NZ") %>%
-  group_by(title, scenario, region, Units, year) %>%
-  summarise(value = sum(value)) %>%
-  mutate( # value=value*277.78,Units="TWh",
-    year = as.character(year), sector = "Electricity"
-  )
-
-
-
-# combining production and elec generation
-prod_tot <- bind_rows(prod_nz, elec_gen_nz) %>%
-  mutate(category = "Production")
-
-# Combining emissions and production quantities
-overall <- bind_rows(em_sec_nz, prod_tot)
-
-
-a <- ggplot(overall %>% filter(year < 2075, year > 2005, sector != "Aluminium")) +
-  geom_line(aes(x = year, y = value, color = category, group = category)) +
-  facet_wrap(~sector, scales = "free") +
-  theme_bw() +
-  labs(
-    x = "", y = "Production (Mt or EJ) and emissions (MTCO2)", color = "",
-    # subtitle = "Sector demand and emissions in an NZ scenario"
-  ) +
-  scale_color_lancet() +
-  theme(legend.position = "top", axis.text.x = element_text(size = 7, angle = 45, vjust = 0.8, hjust = 0.8))
-
-ggsave("output_plots/prod_emiss_nz.png",
-  device = "png", dpi = "print",
-  width = 8, height = 6
-)
-
-elec_gen_tech_nz <- all_data %>%
-  mutate(year = as.numeric(year)) %>%
-  filter(title == "elec gen by subsector", scenario == "NZ") %>%
-  # distinct() %>%
-  pivot_wider(names_from = sector, values_from = value) %>%
-  mutate(`solar` = `solar` + `rooftop_pv`) %>%
-  select(-`rooftop_pv`) %>%
-  pivot_longer(cols = `biomass`:`wind`, names_to = "sector", values_to = "value")
-
-b <- ggplot() +
-  geom_area(
-    elec_gen_tech_nz %>% filter(
-      year < 2075, year > 2005,
-      !sector %in% c("geothermal", "refined liquids")
-    ),
-    mapping = aes(x = year, y = value, fill = sector, group = sector)
-  ) +
-  scale_fill_igv() +
-  theme_bw() +
-  theme(legend.position = "top") +
-  guides(fill = guide_legend(nrow = 2)) +
-  labs(
-    x = "",
-    # subtitle = "Electricity generation by sector (EJ)",
-    y = "Electricity generation (EJ)",
-    fill = ""
-  ) +
-  scale_x_continuous(breaks = seq(2010, 2070, by = 10))
-
-
-
-
-c <- ggplot(em_sec_nz %>% filter(sector == "Electricity", year < 2075, year > 2005)) +
-  geom_line(aes(x = year, y = value * 3.667, color = sector, group = sector), show.legend = F) +
-  scale_color_lancet() +
-  theme_bw() +
-  labs(
-    x = "",
-    #  y = "Emissions (MTCO2)",
-    y = "",
-    subtitle = "Electricity sector emissions (MTCO2)"
-  ) +
-  theme(axis.text.x = element_text(size = 7, angle = 45, vjust = 0.8, hjust = 0.8))
-
-library(patchwork)
-a | (b)
-ggsave("output_plots/pathwork_emissions_production.png",
-  device = "png", dpi = "print",
-  width = 8, height = 6
-)
-```
 
 # Fossil carbon intensity in electricity sector
 ```{r}
