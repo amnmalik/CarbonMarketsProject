@@ -22,7 +22,7 @@ editor_options:
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = F, warning = F,cache = T)
+knitr::opts_chunk$set(echo = TRUE, message = F, warning = F, cache = T)
 ```
 
 ```{r}
@@ -198,7 +198,7 @@ ref_join <- left_join(ref_scen, ref_scen_2015, by = c("sector", "scenario", "tit
   mutate(label = if_else(year.x == 2070, sector, NA_character_))
 
 ggplot(ref_join, mapping = aes(x = year.x, y = growth, color = sector, group = sector)) +
-  geom_line(show.legend = F) +
+  geom_line(linewidth=1.5,show.legend = F) +
   geom_label_repel(aes(label = label),
     nudge_x = 10, box.padding = 0.3, direction = "y",
     na.rm = TRUE, show.legend = F
@@ -215,7 +215,7 @@ ggplot(ref_join, mapping = aes(x = year.x, y = growth, color = sector, group = s
   scale_color_lancet() +
   coord_cartesian(ylim = c(1, 12)) +
   labs(x = "", y = "Change (relative to 2015)") +
-  theme_bw() +
+  theme_pubclean() +
   scale_x_continuous(breaks = seq(2020, 2070, by = 10))
 
 
@@ -223,7 +223,7 @@ ggsave("output_plots/ref_scenario.png",
   device = "png", dpi = "print",
   width = 8, height = 6
 )
-```
+  ```
 
 # Kaya identity
 ```{r}
@@ -235,48 +235,52 @@ ggsave("output_plots/ref_scenario.png",
 # Carbon Intensity
 
 pop <- all_data %>%
-  filter(title == "population by region") 
+  filter(title == "population by region")
 gdp <- all_data %>%
   filter(title == "GDP MER by region")
 
 gdpPerCap <- all_data %>%
-  filter(title == "GDP per capita MER by region") %>% 
-   mutate(title="GDP per capita")
+  filter(title == "GDP per capita MER by region") %>%
+  mutate(title = "GDP per capita")
 
 tot_em <- all_data %>%
   filter(sector == "CO2 emissions") %>%
-   mutate(title = "CO2 emissions")
+  mutate(title = "CO2 emissions")
 
 pe <- all_data %>%
   filter(title == "primary energy consumption by region (direct equivalent)") %>%
   group_by(title, scenario, year, Units, region) %>%
   summarise(value = sum(value)) %>%
   mutate(title = "total primary energy") %>%
-  ungroup() 
+  ungroup()
 
-carbon_intensity <- left_join(tot_em, pe, by = c("scenario", "year", "region")) %>% 
+carbon_intensity <- left_join(tot_em, pe, by = c("scenario", "year", "region")) %>%
   mutate(value = value.x / value.y) %>%
-  mutate(title = "Emissions intensity (CO2/Energy)") %>% select(title,year, value,scenario)
+  mutate(title = "Emissions intensity (CO2/Energy)") %>%
+  select(title, year, value, scenario)
 
 en_intensity <- left_join(pe, gdp, by = c("scenario", "year", "region")) %>%
-    mutate(title = "Energy intensity (Energy/GDP)") %>%   mutate(value = value.x / value.y) %>% 
- select(title,year, value,scenario)
+  mutate(title = "Energy intensity (Energy/GDP)") %>%
+  mutate(value = value.x / value.y) %>%
+  select(title, year, value, scenario)
 
 
 
-kaya <- gdpPerCap %>% 
-  bind_rows(tot_em) %>% 
-  bind_rows(carbon_intensity) %>% 
-  bind_rows(en_intensity) %>% 
-  filter(scenario=="NZ") 
-kaya_ref <- kaya %>% filter(year=="2015")
+kaya <- gdpPerCap %>%
+  bind_rows(tot_em) %>%
+  bind_rows(carbon_intensity) %>%
+  bind_rows(en_intensity) %>%
+  filter(scenario == "NZ")
+kaya_ref <- kaya %>% filter(year == "2015")
 
-kaya2 <- left_join(kaya,kaya_ref,by=c("title","scenario","sector","Units")) %>% 
-  mutate(value=value.x/value.y,
-         value= round(value, 2))
+kaya2 <- left_join(kaya, kaya_ref, by = c("title", "scenario", "sector", "Units")) %>%
+  mutate(
+    value = value.x / value.y,
+    value = round(value, 2)
+  )
 
-ggplot(kaya2 %>% filter(year.x > 2010,year.x<2075)) +
-  geom_line(mapping = aes(x = year.x, y = value, color = title, group = title),linewidth=1.5) +
+ggplot(kaya2 %>% filter(year.x > 2010, year.x < 2075)) +
+  geom_line(mapping = aes(x = year.x, y = value, color = title, group = title), linewidth = 1.5) +
   theme_pubclean() +
   scale_color_lancet() +
   labs(x = "", y = "Change rel. to 2015", subtitle = "Drivers of emission change: Kaya identity") +
@@ -387,7 +391,7 @@ b <- ggplot() +
 #   theme(axis.text.x = element_text(size = 7, angle = 45, vjust = 0.8, hjust = 0.8))
 
 library(patchwork)
-a | (b) 
+a | (b)
 
 ggsave("output_plots/pathwork_emissions_production.png",
   device = "png", dpi = "print",
@@ -461,6 +465,15 @@ ggsave("output_plots/abs_emiss_red.png",
 em_sec <- all_data %>%
   filter(title %in% grep(x = title, pattern = "emissions by sector", value = T)) %>%
   mutate(value = if_else(scenario != "NZ", value / 2, value))
+
+em_sec_tot <- em_sec %>% 
+  filter(sector %in% common) %>% 
+  group_by(scenario,year,Units) %>% 
+  summarise(value=sum(value))
+  
+ggplot()+
+  geom_line(em_sec_tot %>% filter(year > 2025, year < 2045, !scenario %in% c("NZ","NZ+RPO+ETS")),mapping =            aes(x=year,y=value,color=scenario,group=scenario))
+  
 
 ggplot() +
   geom_line(em_sec %>% filter(sector %in% common, year > 2015, year < 2075, scenario %in% c("NZ", "NZ+ETS", "NZ+RPO+ETS")),
@@ -640,16 +653,16 @@ elec_gen_share <- all_data %>%
 # ))
 # mutate(category = if_else(sector %in% c("wind", "rooftop_pv","hydro","geothermal","nuclear"), "Other",sector))
 
-ggplot(elec_gen_share %>% filter(year %in% c(2020, 2040, 2070), scenario %in% c("NZ", "NZ+ETS", "NZ+RPO+ETS"))) +
+ggplot(elec_gen_share %>% filter(year %in% c(2020, 2040, 2070), !sector %in% c("refined liquids","geothermal"), scenario %in% c("NZ", "NZ+ETS", "NZ+RPO+ETS"))) +
   geom_bar(mapping = aes(x = scenario, y = percent, fill = sector), stat = "identity") +
   facet_grid(. ~ year) +
   scale_fill_igv() +
-  theme_bw() +
-  labs(x = "", y = "Share of electricity generation by source (%)", fill = "category") +
+  theme_pubclean() +
+  labs(x = "", y = "Share of electricity generation by source (%)", fill = "") +
   # scale_y_continuous(sec.axis = dup_axis(name = ""))
   theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 0.8, hjust = 0.8))
 
-ggsave("output_plots/elec_mix_comp.png",
+ggsave("output_plots/elec_mix_comp2.png",
   device = "png", dpi = "print",
   width = 8, height = 6
 )
@@ -944,6 +957,60 @@ ggsave("output_plots/FE_INdustry_mix.png",
 ```{r}
 ```
 
+## inter-sectoral transfers and auction revenue
+```{r}
+
+sheets <- as.character(seq(2030,2065,5))
+
+sheet_list <- list()
+
+list_all <- lapply(sheets, function(x) {          # Read all sheets to list
+  as.data.frame(read_excel("data/Auctioning_sheet.xlsx", sheet = x)) } )
+
+transfers <- do.call(rbind,list_all) 
+
+ggplot(transfers)+
+  geom_col(mapping = aes(x=year,y=`Surplus Allowances`*3.667,fill=Sectors,group=Sectors))+
+  scale_fill_lancet()+
+  theme_pubclean()+
+  facet_wrap(~scenario)+
+  labs(x="",y=" Surplus Allowances (MTCO2)",fill="")
+  
+ggsave("output_plots/sectoral_transfers.png",
+  device = "png", dpi = "print",
+  width = 8, height = 6
+)
+
+```
+
+## Auctioning revenue
+```{r}
+power_ets <- em_sec %>% 
+  filter(sector=="Electricity",
+  scenario %in% c("NZ+CC", "NZ+CC_v1", "NZ+CC_v2"),year %in% c(2025:2070)) %>% mutate(value=value*3.67,Units="MTCO2") 
+
+ets_price <- Cprices %>% 
+  filter(scenario== "NZ+ETS",year %in% c(2025:2070),sector=="ETS") %>% mutate(value=value,Units="$2020/CO2")
+
+scenarios <- data.frame(year=as.character(seq(2025,2070,5)),scen1=c(0,0.1,0.5,rep(1,7)),scen2=c(0,0.1,0.25,0.5,0.75,1,rep(1,4)))
+# %>% pivot_longer(c(2:3),names_to = "scenario",values_to = "value")
+
+revenue <- left_join(left_join(power_ets,ets_price,by="year"),scenarios,by="year") %>% mutate(rev1=value.x*value.y*scen1,rev2=value.x*value.y*scen2) %>% 
+select(scenario.x,year,rev1,rev2) %>% 
+  pivot_longer(c(3:4),names_to = "scenario",values_to = "value") 
+
+ggplot()+
+  geom_line(revenue %>% filter(year<2070) %>% mutate(value=value/1000),mapping = aes(x=year,y=value,color=scenario.x,linetype=scenario,group=interaction(scenario.x,scenario)),linewidth=1.5)+
+labs(x="",y="Billion dollars(20202$)",linetype="",color="",
+     subtitle = "Auctioning revenue")+
+  theme_pubclean()
+
+ggsave("output_plots/revenue.png",
+  device = "png", dpi = "print",
+  width = 8, height = 6
+)
+
+```
 
 
 
