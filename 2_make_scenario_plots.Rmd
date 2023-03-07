@@ -708,21 +708,21 @@ ggsave("output_plots/pe_mix.png",
 ```{r}
 Cprices <- all_data %>%
   filter(title == "CO2 prices") %>%
-  mutate(value = value * 1.98 * 3.667, Units = "2020$/tCO2") %>%
+  mutate(value = (value * 1.98)/3.667, Units = "2020$/tCO2") %>%
   mutate(
     sector = gsub(sector, pattern = "India", replacement = ""),
     sector = gsub(sector, pattern = "All", replacement = ""),
     sector = if_else(sector == "CO2", sector, gsub(sector, pattern = "CO2", replacement = ""))
   )
 
-ggplot(Cprices %>% filter(sector != "refining", year > 2015, year < 2065, sector != "CO2", !scenario %in% c("NZ", "NZ+ETS", "NZ+RPO+ETS"))) +
+ggplot(Cprices %>% filter(sector != "refining", year > 2015, year < 2065, sector != "CO2", scenario %in% c("NZ+CC"))) +
   geom_line(mapping = aes(x = year, y = value, group = sector, color = sector)) +
   # geom_point(mapping = aes(x=year,y=value,group = scenario,shape=scenario,color=scenario))+
   facet_wrap(~scenario, shrink = T, scales = "free") +
   scale_color_lancet() +
   theme_bw() +
   labs(x = "", y = "CO2 Price (2020$/tCO2)", ) +
-  coord_cartesian(ylim = c(0, 1000)) +
+  coord_cartesian(ylim = c(0, 200)) +
   theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 0.8, hjust = 0.8))
 
 ggsave("output_plots/C_prices.png",
