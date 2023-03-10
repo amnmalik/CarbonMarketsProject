@@ -34,11 +34,22 @@ library(geomtextpath)
 library(DT)
 library(readxl)
 library(ggrepel)
+library(jgcricolors)
 ```
 
-```{r}
 # Setting palette
-mypal = jgcricol()$pal_all
+```{r}
+
+mypal <- jgcricol()$pal_all
+techs <- jgcricol()$pal_basic[c(1:3,5)]
+names(techs) <- c("Cement","Fertilizer", "Iron and Steel", "Electricity")
+
+kaya <- jgcricol()$pal_16[8:15]
+names(kaya) <- c("Electricity generation","GDP per capita","transportation","industry","building","CO2 emissions","Emissions intensity (CO2/Energy)","Energy intensity (Energy/GDP)")
+
+mypal <- c(kaya,techs,mypal,"delivered biomass" = "darkolivegreen2","delivered coal"= "black","H2"= "peachpuff2","refined liquids industrial"= "#d01c2a")
+
+
 ```
 
 
@@ -205,7 +216,7 @@ ref_join <- left_join(ref_scen, ref_scen_2015, by = c("sector", "scenario", "tit
   mutate(label = if_else(year.x == 2070, sector, NA_character_))
 
 ggplot(ref_join, mapping = aes(x = year.x, y = growth, color = sector, group = sector)) +
-  geom_line(linewidth=1.5,show.legend = F) +
+  geom_line(linewidth = 1.5, show.legend = F) +
   geom_label_repel(aes(label = label),
     nudge_x = 10, box.padding = 0.3, direction = "y",
     na.rm = TRUE, show.legend = F
@@ -219,7 +230,7 @@ ggplot(ref_join, mapping = aes(x = year.x, y = growth, color = sector, group = s
   annotate("text", x = 2015, y = 8, label = "FE Buildings|2015 : 8.6 EJ", hjust = 0, vjust = 0) +
   annotate("text", x = 2015, y = 7, label = "FE Industry|2015 : 11.85 EJ", hjust = 0, vjust = 0) +
   annotate("text", x = 2015, y = 6, label = "FE Transport|2015 : 4.01 EJ", hjust = 0, vjust = 0) +
-  scale_color_manual(values = jgcricol()$pal_basic) +
+  scale_color_manual(values = mypal[names(mypal)%in% unique(ref_join$sector)]) +
   coord_cartesian(ylim = c(1, 12)) +
   labs(x = "", y = "Change (relative to 2015)") +
   theme_pubclean() +
@@ -230,9 +241,10 @@ ggsave("output_plots/ref_scenario.png",
   device = "png", dpi = "print",
   width = 8, height = 6
 )
-  ```
+```
 
 # Kaya identity
+
 ```{r}
 # Population
 # GDP per capita
@@ -289,7 +301,7 @@ kaya2 <- left_join(kaya, kaya_ref, by = c("title", "scenario", "sector", "Units"
 ggplot(kaya2 %>% filter(year.x > 2010, year.x < 2075)) +
   geom_line(mapping = aes(x = year.x, y = value, color = title, group = title), linewidth = 1.5) +
   theme_pubclean() +
-  scale_color_lancet() +
+  scale_color_manual(values = mypal[names(mypal) %in% unique(kaya2$title)])+
   labs(x = "", y = "Change rel. to 2015", subtitle = "Drivers of emission change: Kaya identity") +
   theme(legend.position = c(0.25, 0.8), legend.title = element_blank(), legend.box.background = element_rect(colour = "black"))
 
@@ -370,7 +382,7 @@ b <- ggplot() +
     ),
     mapping = aes(x = year, y = value, fill = sector, group = sector)
   ) +
-  scale_fill_igv() +
+scale_fill_manual(values=mypal[names(mypal) %in% unique(elec_gen_tech_nz$sector)])+
   theme_pubclean() +
   theme(legend.position = "top") +
   guides(fill = guide_legend(nrow = 2)) +
@@ -457,7 +469,7 @@ em_sec_share_tot <- em_sec_share %>%
 ggplot(em_sec_share_tot %>% filter(scenario == "NZ+ETS_diff", year < 2075)) +
   geom_col(mapping = aes(x = year, y = value, fill = sector)) +
   theme_bw() +
-  scale_fill_lancet() +
+   scale_fill_manual(values = mypal[names(mypal) %in% unique(em_sec_share_tot$sector)]) +
   labs(x = "", y = "Emissions (MTCO2)", subtitle = "Absolute emission reduction in NZ+ETS vs. NZ scenario")
 # facet_wrap(~scenario)
 
@@ -473,14 +485,6 @@ em_sec <- all_data %>%
   filter(title %in% grep(x = title, pattern = "emissions by sector", value = T)) %>%
   mutate(value = if_else(scenario != "NZ", value / 2, value))
 
-em_sec_tot <- em_sec %>% 
-  filter(sector %in% common) %>% 
-  group_by(scenario,year,Units) %>% 
-  summarise(value=sum(value))
-  
-ggplot()+
-  geom_line(em_sec_tot %>% filter(year > 2025, year < 2045, !scenario %in% c("NZ","NZ+RPO+ETS")),mapping =            aes(x=year,y=value,color=scenario,group=scenario))
-  
 
 ggplot() +
   geom_line(em_sec %>% filter(sector %in% common, year > 2015, year < 2075, scenario %in% c("NZ", "NZ+ETS", "NZ+RPO+ETS")),
@@ -524,7 +528,6 @@ em_sec_join <- left_join(combined, em_sec_nz, by = c("title", "sector", "region"
 
 ggplot(em_sec_join %>% filter(
   sector != "Petroleum Refinery", sector %in% common, year > 2015, year < 2055 # scenario.x %in% c("NZ", "NZ+ETS", "NZ+CC")
-
 )) +
   geom_textline(mapping = aes(x = year, y = change, label = label, color = label, group = scenario.x), vjust = 0.2, rich = TRUE, size = 2, show.legend = F) +
   facet_wrap(~sector) +
@@ -660,10 +663,10 @@ elec_gen_share <- all_data %>%
 # ))
 # mutate(category = if_else(sector %in% c("wind", "rooftop_pv","hydro","geothermal","nuclear"), "Other",sector))
 
-ggplot(elec_gen_share %>% filter(year %in% c(2020, 2040, 2070), !sector %in% c("refined liquids","geothermal"), scenario %in% c("NZ", "NZ+ETS", "NZ+RPO+ETS"))) +
+ggplot(elec_gen_share %>% filter(year %in% c(2020, 2040, 2070), !sector %in% c("refined liquids", "geothermal"), scenario %in% c("NZ", "NZ+ETS", "NZ+RPO+ETS"))) +
   geom_bar(mapping = aes(x = scenario, y = percent, fill = sector), stat = "identity") +
   facet_grid(. ~ year) +
-  scale_fill_igv() +
+  scale_fill_manual(values = mypal[names(mypal) %in% unique(elec_gen_share$sector)]) +
   theme_pubclean() +
   labs(x = "", y = "Share of electricity generation by source (%)", fill = "") +
   # scale_y_continuous(sec.axis = dup_axis(name = ""))
@@ -699,7 +702,7 @@ pe <- all_data %>%
 ggplot(pe %>% filter(year %in% c(2020, 2030, 2050, 2070))) +
   geom_bar(mapping = aes(x = scenario, y = percent, fill = sector), stat = "identity") +
   facet_grid(. ~ year) +
-  scale_fill_manual(values = mypal[names(mypal) %in% unique(pe$sector)])+
+  scale_fill_manual(values = mypal[names(mypal) %in% unique(pe$sector)]) +
   theme_bw() +
   labs(x = "", y = "Share of primary energy (%)", fill = "category") +
   scale_y_continuous(sec.axis = dup_axis(name = "")) +
@@ -715,25 +718,22 @@ ggsave("output_plots/pe_mix.png",
 ```{r}
 Cprices <- all_data %>%
   filter(title == "CO2 prices") %>%
-  mutate(value = (value * 1.98)/3.667, Units = "2020$/tCO2") %>%
-  mutate(
-    sector = gsub(sector, pattern = "India", replacement = ""),
-    sector = gsub(sector, pattern = "All", replacement = ""),
-    sector = if_else(sector == "CO2", sector, gsub(sector, pattern = "CO2", replacement = ""))
-  )
+  mutate(value = (value * 1.98) / 3.667, Units = "2020$/tCO2") %>%
+  mutate(sector = if_else(sector == "CO2", sector, gsub(sector, pattern = "CO2", replacement = "")),
+sector = mgsub::mgsub(sector,pattern = c("India","All","CO2","Elec","Fert","IRSTL","ETS"),replacement = c("", "", "CO2 (net-zero)", "Electricity", "Fertilizer", "Iron and Steel", "CO2 (ETS)")))
 
-p1 <- ggplot(Cprices %>% filter(sector != "refining", year > 2015, year < 2070, sector != "CO2", scenario %in% c("NZ+CC"))) +
+p1 <- ggplot(Cprices %>% filter(sector != "refining", year > 2015, year < 2070, scenario %in% c("NZ+CC", "NZ+ETS"))) +
   geom_line(mapping = aes(x = year, y = value, group = sector, color = sector)) +
-  # geom_point(mapping = aes(x=year,y=value,group = scenario,shape=scenario,color=scenario))+
+  # geom_point(mapping = aes(x=year,y=value,group = scenario,shape=sector,color=sector),show.legend = F)+
   facet_wrap(~scenario, shrink = T, scales = "free") +
-  scale_color_lancet() +
+  scale_color_manual(values = mypal[names(mypal) %in% unique(Cprices$sector)]) +
   theme_pubclean() +
   labs(x = "", y = "CO2 Price (2020$/tCO2)", ) +
   coord_cartesian(ylim = c(0, 1000)) +
   theme(axis.text.x = element_text(size = 8, angle = 45, vjust = 0.8, hjust = 0.8))
 
 p2 <- ggplot(Cprices %>% filter(sector != "refining", year > 2015, year < 2070, sector != "CO2", scenario %in% c("NZ+CC"))) +
-  geom_line(mapping = aes(x = year, y = value, group = sector, color = sector),show.legend = F) +
+  geom_line(mapping = aes(x = year, y = value, group = sector, color = sector), show.legend = F) +
   facet_wrap(~scenario, shrink = T, scales = "free") +
   scale_color_lancet() +
   theme_pubclean(base_size = 10) +
@@ -752,7 +752,7 @@ ggsave("output_plots/C_prices.png",
 )
 ```
 
-## Final energy mix by agg sector
+# Final energy mix by agg sector
 ```{r}
 fe_sector <- all_data %>%
   filter(title == "total final energy by aggregate sector", year > 2010, year < 2075) %>%
@@ -762,7 +762,7 @@ fe_sector <- all_data %>%
 ggplot(fe_sector %>% filter(year %in% c(2020, 2030, 2050, 2070), scenario == "NZ")) +
   geom_bar(mapping = aes(x = scenario, y = percent, fill = sector), stat = "identity") +
   facet_grid(. ~ year) +
-  scale_fill_igv() +
+  scale_fill_manual(values = mypal[names(mypal) %in% unique(fe_sector$sector)]) +
   theme_bw() +
   labs(x = "", y = "Share of final energy by enduse sector (%)", fill = "category") +
   scale_y_continuous(sec.axis = dup_axis(name = "")) +
@@ -774,7 +774,7 @@ ggsave("output_plots/FE_mix.png",
 )
 ```
 
-## Final energy mix by fuel
+# Final energy mix by fuel
 ```{r}
 fe_fuel <- all_data %>%
   filter(title == "final energy consumption by fuel", year > 2010, year < 2075) %>%
@@ -784,7 +784,7 @@ fe_fuel <- all_data %>%
 ggplot(fe_fuel %>% filter(year %in% c(2020, 2050, 2070), scenario %in% c("NZ", "NZ+ETS"))) +
   geom_bar(mapping = aes(x = scenario, y = percent, fill = sector), stat = "identity") +
   facet_grid(. ~ year) +
-  scale_fill_igv() +
+  scale_fill_manual(values = mypal[names(mypal) %in% unique(fe_fuel$sector)]) +
   theme_bw() +
   labs(x = "", y = "Share of final energy (%)", fill = "category")
 #  scale_y_continuous(sec.axis = dup_axis(name = "")) +
@@ -902,22 +902,22 @@ ccs_share <- fe_by_fuel_sector %>%
   group_by(sector, scenario, year) %>%
   summarise(perc = sum(perc))
 
-gh <- ggplot(ccs_share %>% filter(sector %in% common, year %in% c(2020, 2040, 2065, 2070))) +
+gh <- ggplot(ccs_share %>% filter(sector %in% common, year %in% c(2020, 2040, 2065, 2070),scenario =="NZ")) +
   geom_line(mapping = aes(x = year, y = perc, color = sector, group = interaction(sector, scenario)), show.legend = F) +
   geom_point(mapping = aes(x = year, y = perc, color = sector, shape = sector, group = interaction(sector, scenario)), size = 3) +
-  scale_color_brewer() +
+  scale_color_manual(values = mypal[names(mypal) %in% unique(ccs_share$sector)]) +
   theme_bw() +
   facet_grid(. ~ scenario) +
   labs(subtitle = "Share of CCS technologies \n in final energy (%)", x = "", y = "") +
   coord_cartesian(ylim = c(0, 100))
 
 # Bar graphs final energy by sector and fuel
-ij <- ggplot(fe_by_fuel_sector_share %>% filter(year %in% c(2030, 2040, 2065), sector %in% common)) +
+ij <- ggplot(fe_by_fuel_sector_share %>% filter(year %in% c(2030, 2040, 2065), sector %in% common,scenario =="NZ")) +
   geom_col(mapping = aes(x = year, y = perc, fill = input, group = input)) +
   facet_grid(scenario ~ sector) +
   theme_bw() +
   labs(x = "", y = "", subtitle = "Share of final energy by fuel") +
-  scale_fill_lancet(
+  scale_fill_manual(values = mypal[names(mypal) %in% unique(fe_by_fuel_sector_share$input)],
     name = "Fuel", breaks = c(unique(fe_by_fuel_sector$input)),
     labels = c(
       "gas", "hydrogen", "refined liquids",
@@ -941,16 +941,9 @@ ggsave("output_plots/share_h2_elec_CCS.png",
 )
 
 
-
-# ggplot(fe_by_fuel_sector_share %>% filter(input == "electricity", year %in% c(2020:2070), sector %in% common)) +
-#   geom_line(mapping = aes(x = year, y = perc, color = scenario, group = scenario)) +
-#   scale_color_lancet() +
-#   facet_wrap(~sector) +
-#   theme_bw() +
-#   labs(y = "Share of electricity in final energy (%)")
 ```
 
-## Final energy mix of industry sector
+# Final energy mix of industry sector
 ```{r}
 fe_by_fuel_sector_mix <- fe_by_fuel_sector %>%
   filter(year > 2010, year < 2075) %>%
@@ -963,8 +956,8 @@ fe_by_fuel_sector_mix <- fe_by_fuel_sector %>%
 ggplot(fe_by_fuel_sector_mix %>% filter(year %in% c(2020, 2030, 2050, 2070), scenario == "NZ")) +
   geom_bar(mapping = aes(x = scenario, y = percent, fill = input), stat = "identity") +
   facet_grid(. ~ year) +
-  scale_fill_igv() +
-  #  theme_ipsum_tw() +
+  scale_fill_manual(values = mypal[names(mypal) %in% unique(fe_by_fuel_sector_mix$input)])+ 
+  theme_pubclean() +
   labs(x = "", y = "", subtitle = "Share of final energy in industry (%)", fill = "category") +
   scale_y_continuous(sec.axis = dup_axis(name = "")) +
   theme(axis.text.x = element_text(size = 6, angle = 45, vjust = 0.8, hjust = 0.8))
@@ -978,59 +971,64 @@ ggsave("output_plots/FE_INdustry_mix.png",
 ```{r}
 ```
 
-## inter-sectoral transfers and auction revenue
+# Inter-sectoral transfers and auction revenue
 ```{r}
-
-sheets <- as.character(seq(2030,2065,5))
+sheets <- as.character(seq(2030, 2065, 5))
 
 sheet_list <- list()
 
-list_all <- lapply(sheets, function(x) {          # Read all sheets to list
-  as.data.frame(read_excel("data/Auctioning_sheet.xlsx", sheet = x)) } )
+list_all <- lapply(sheets, function(x) { # Read all sheets to list
+  as.data.frame(read_excel("data/Auctioning_sheet.xlsx", sheet = x))
+})
 
-transfers <- do.call(rbind,list_all) 
+transfers <- do.call(rbind, list_all)
 
-ggplot(transfers)+
-  geom_col(mapping = aes(x=year,y=`Surplus Allowances`*3.667,fill=Sectors,group=Sectors))+
-  scale_fill_lancet()+
-  theme_pubclean()+
-  facet_wrap(~scenario)+
-  labs(x="",y=" Surplus Allowances (MTCO2)",fill="")
-  
+ggplot(transfers) +
+  geom_col(mapping = aes(x = year, y = `Surplus Allowances` * 3.667, fill = Sectors, group = Sectors)) +
+  scale_fill_lancet() +
+  theme_pubclean() +
+  facet_wrap(~scenario) +
+  labs(x = "", y = " Surplus Allowances (MTCO2)", fill = "")
+
 ggsave("output_plots/sectoral_transfers.png",
   device = "png", dpi = "print",
   width = 8, height = 6
 )
-
 ```
 
-## Auctioning revenue
+# Auctioning revenue
 ```{r}
-power_ets <- em_sec %>% 
-  filter(sector=="Electricity",
-  scenario %in% c("NZ+CC", "NZ+CC_v1", "NZ+CC_v2"),year %in% c(2025:2070)) %>% mutate(value=value*3.67,Units="MTCO2") 
+power_ets <- em_sec %>%
+  filter(
+    sector == "Electricity",
+    scenario %in% c("NZ+CC", "NZ+CC_v1", "NZ+CC_v2"), year %in% c(2025:2070)
+  ) %>%
+  mutate(value = value * 3.67, Units = "MTCO2")
 
-ets_price <- Cprices %>% 
-  filter(scenario== "NZ+ETS",year %in% c(2025:2070),sector=="ETS") %>% mutate(value=value,Units="$2020/CO2")
+ets_price <- Cprices %>%
+  filter(scenario == "NZ+ETS", year %in% c(2025:2070), sector == "ETS") %>%
+  mutate(value = value, Units = "$2020/CO2")
 
-scenarios <- data.frame(year=as.character(seq(2025,2070,5)),scen1=c(0,0.1,0.5,rep(1,7)),scen2=c(0,0.1,0.25,0.5,0.75,1,rep(1,4)))
+scenarios <- data.frame(year = as.character(seq(2025, 2070, 5)), scen1 = c(0, 0.1, 0.5, rep(1, 7)), scen2 = c(0, 0.1, 0.25, 0.5, 0.75, 1, rep(1, 4)))
 # %>% pivot_longer(c(2:3),names_to = "scenario",values_to = "value")
 
-revenue <- left_join(left_join(power_ets,ets_price,by="year"),scenarios,by="year") %>% mutate(rev1=value.x*value.y*scen1,rev2=value.x*value.y*scen2) %>% 
-select(scenario.x,year,rev1,rev2) %>% 
-  pivot_longer(c(3:4),names_to = "scenario",values_to = "value") 
+revenue <- left_join(left_join(power_ets, ets_price, by = "year"), scenarios, by = "year") %>%
+  mutate(rev1 = value.x * value.y * scen1, rev2 = value.x * value.y * scen2) %>%
+  select(scenario.x, year, rev1, rev2) %>%
+  pivot_longer(c(3:4), names_to = "scenario", values_to = "value")
 
-ggplot()+
-  geom_line(revenue %>% filter(year<2070) %>% mutate(value=value/1000),mapping = aes(x=year,y=value,color=scenario.x,linetype=scenario,group=interaction(scenario.x,scenario)),linewidth=1.5)+
-labs(x="",y="Billion dollars(20202$)",linetype="",color="",
-     subtitle = "Auctioning revenue")+
+ggplot() +
+  geom_line(revenue %>% filter(year < 2070) %>% mutate(value = value / 1000), mapping = aes(x = year, y = value, color = scenario.x, linetype = scenario, group = interaction(scenario.x, scenario)), linewidth = 1.5) +
+  labs(
+    x = "", y = "Billion dollars(20202$)", linetype = "", color = "",
+    subtitle = "Auctioning revenue"
+  ) +
   theme_pubclean()
 
 ggsave("output_plots/revenue.png",
   device = "png", dpi = "print",
   width = 8, height = 6
 )
-
 ```
 
 
@@ -1048,7 +1046,7 @@ ggplot(gen_costs) +
   facet_wrap(~scenario) +
   theme_bw() +
   theme(legend.position = "none", strip.background = element_blank()) +
-  scale_color_uchicago() +
+ scale_color_manual(values = mypal[names(mypal) %in% unique(gen_costs$label)])+ 
   labs(x = "", y = "Generation costs (USD2020/GJ)")
 
 ggsave("output_plots/gen_costs.png",
@@ -1068,7 +1066,7 @@ fuel_prices <- all_data %>%
       mgsub::mgsub(sector, pattern = c(
         "H2 industrial",
         "elect_td_ind", "refined liquids industrial", "delivered biomass", "wholesale gas", "delivered coal"
-      ), replacement = c("hydrogen", "electricity", "liquids", "biomass", "gas", "coal")), label = sector
+      ), replacement = c("hydrogen", "elect_td_ind", "refined liquids", "biomass", "gas", "coal")), label = sector
   )
 
 ggplot(fuel_prices) +
@@ -1076,7 +1074,7 @@ ggplot(fuel_prices) +
   facet_wrap(~scenario) +
   theme_bw() +
   theme(legend.position = "none", strip.background = element_blank()) +
-  scale_color_uchicago() +
+ scale_color_manual(values = mypal[names(mypal) %in% unique(fuel_prices$label)])+ 
   labs(x = "", y = "Fuel price to industry (USD2020/GJ)")
 
 ggsave("output_plots/fuel_prices2industry.png",
