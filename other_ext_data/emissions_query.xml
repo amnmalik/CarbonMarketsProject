@@ -94,7 +94,6 @@
         <axis2 name="Year">emissions</axis2>
         <xPath buildList="false" dataName="emissions" group="false" sumAll="false">*[@type='sector']//CO2/emissions/node()[ancestor::*[(@type='sector') and (@name='cement' or @name='process heat cement')]]</xPath>
         <comments/>
-		
 		<labelRewriteList append-values="false">
     <level name="sector">
 	<rewrite from="process heat cement" to="cement"/>
@@ -124,7 +123,7 @@
 	</emissionsQueryBuilder>
 </aQuery>
 
-<!-- 
+
 <aQuery>
 	<region name="India"/>
 		<emissionsQueryBuilder title="CO2 emissions by sector: TPP">
@@ -155,8 +154,8 @@
 		   </labelRewriteList>
 		   </emissionsQueryBuilder>
 		
-</aQuery> -->
-<aQuery>
+</aQuery>
+<!-- <aQuery>
 	<region name="India"/>
 		<emissionsQueryBuilder title="CO2 emissions in electricity sector">
 		 <axis1 name="sector">sector</axis1>
@@ -186,7 +185,7 @@
 		   </labelRewriteList>
 		   </emissionsQueryBuilder>
 		
-</aQuery>
+</aQuery> -->
 
 
 	<aQuery>
@@ -201,6 +200,47 @@
 </supplyDemandQuery>
 
 </aQuery>
+
+	<aQuery>
+	<region name="India"/>
+<supplyDemandQuery title="elec gen by tech">
+    <axis1 name="technology">technology</axis1>
+    <axis2 name="Year">physical-output[@vintage]</axis2>
+    <xPath buildList="true" dataName="output" group="false" sumAll="false">*[@type='sector' (:collapse:) and
+               (@name='electricity' or @name='elect_td_bld' or @name='industrial energy use')]/
+               *[@type='subsector' (:collapse:)]/*[@type='technology' and not (@name='electricity' or @name='elect_td_bld')]/
+               *[@type='output' (:collapse:) and (@name='electricity' or @name='elect_td_bld')]/
+               physical-output/node()</xPath>
+    <comments/>
+	 <labelRewriteList append-values="false">
+        <level name="technology">
+		<rewrite from="biomass (IGCC)" to="biomass"/>
+		<rewrite from="biomass (IGCC CCS)" to="biomass CCS"/>
+		<rewrite from="biomass (conv CCS)" to="biomass CCS"/>
+		<rewrite from="biomass (conv)" to="biomass"/>
+		<rewrite from="coal (IGCC)" to="coal"/>
+		<rewrite from="coal (IGCC CCS)" to="coal CCS"/>
+		<rewrite from="coal (conv pul)" to="coal"/>
+		<rewrite from="coal (conv pul CCS)" to="coal CCS"/>
+		<rewrite from="gas (CC)" to="gas"/>
+		<rewrite from="gas (CC CCS)" to="gas CCS"/>
+		<rewrite from="gas (steam/CT)" to="gas"/>
+		<rewrite from="Gen_III" to="nuclear"/>
+		<rewrite from="Gen_II_LWR" to="nuclear"/>
+		<rewrite from="refined liquids (CC CCS)" to="refined liquids"/>
+		<rewrite from="refined liquids (CC)" to="refined liquids"/>
+		<rewrite from="refined liquids (steam/CT)" to="refined liquids"/>
+		<rewrite from="rooftop_pv" to="solar"/>
+		<rewrite from="CSP_storage" to="solar"/>
+		<rewrite from="PV" to="solar"/>
+		<rewrite from="PV_storage" to="solar"/>
+		<rewrite from="wind_offshore" to="wind"/>	
+		<rewrite from="wind_storage" to="wind"/>	
+		  </level>
+    </labelRewriteList>
+</supplyDemandQuery>
+</aQuery>
+
 
 <!-- 	<aQuery>
 	<region name="India"/>
